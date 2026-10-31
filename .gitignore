@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary Office and lock files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# Virtual environments
+venv/
+.env
+.venv/
+env/
+
+# IDE files
+.vscode/
+.idea/

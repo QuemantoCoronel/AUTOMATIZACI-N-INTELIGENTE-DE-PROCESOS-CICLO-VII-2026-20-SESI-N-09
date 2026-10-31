@@ -1,0 +1,731 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_ASIS_Cotizaciones" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.30.0">
+  <bpmn:message id="Message_Solicitud" name="Solicitud de cotización" />
+  <bpmn:message id="Message_SolicitudDatos" name="Solicitud de datos faltantes" />
+  <bpmn:message id="Message_DatosAdicionales" name="Datos adicionales" />
+  <bpmn:message id="Message_Cotizacion" name="Cotización" />
+  <bpmn:message id="Message_Aceptacion" name="Aceptación de cotización" />
+  <bpmn:message id="Message_Modificacion" name="Solicitud de modificación" />
+  <bpmn:message id="Message_Rechazo" name="Rechazo de cotización" />
+  <bpmn:dataStore id="DataStore_RegistroManual" name="Cuaderno / hoja de control de solicitudes" />
+  <bpmn:collaboration id="Collaboration_ASIS">
+    <bpmn:participant id="Participant_Cliente" name="Cliente / familiar" />
+    <bpmn:participant id="Participant_Funeraria" name="Funeraria - Atención de cotizaciones" processRef="Process_Funeraria" />
+    <bpmn:messageFlow id="MessageFlow_Solicitud" name="Solicitud de cotización" sourceRef="Participant_Cliente" targetRef="StartEvent_Solicitud" />
+    <bpmn:messageFlow id="MessageFlow_SolicitarDatos" name="Solicitud de datos faltantes" sourceRef="Task_SolicitarDatos" targetRef="Participant_Cliente" />
+    <bpmn:messageFlow id="MessageFlow_Datos" name="Datos adicionales" sourceRef="Participant_Cliente" targetRef="Event_DatosRecibidos" />
+    <bpmn:messageFlow id="MessageFlow_Cotizacion" name="Cotización" sourceRef="Task_ComunicarCotizacion" targetRef="Participant_Cliente" />
+    <bpmn:messageFlow id="MessageFlow_Aceptacion" name="Aceptación" sourceRef="Participant_Cliente" targetRef="Event_Aceptacion" />
+    <bpmn:messageFlow id="MessageFlow_Modificacion" name="Modificación" sourceRef="Participant_Cliente" targetRef="Event_Modificacion" />
+    <bpmn:messageFlow id="MessageFlow_Rechazo" name="Rechazo" sourceRef="Participant_Cliente" targetRef="Event_Rechazo" />
+    <bpmn:textAnnotation id="TextAnnotation_Canales">
+      <bpmn:text>Canales actuales: presencial, teléfono o WhatsApp. La información se transcribe y registra manualmente.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Canales" associationDirection="None" sourceRef="TextAnnotation_Canales" targetRef="Task_RegistrarSolicitud" />
+    <bpmn:textAnnotation id="TextAnnotation_Alcance">
+      <bpmn:text>Fuera de alcance AS-IS: contratación, pago, retiro del cuerpo, velatorio, sepelio y cierre del servicio funerario.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Alcance" associationDirection="None" sourceRef="TextAnnotation_Alcance" targetRef="Task_ComunicarCotizacion" />
+    <bpmn:textAnnotation id="TextAnnotation_Plazos">
+      <bpmn:text>Los plazos de espera deben validarse con el personal de la funeraria antes de fijar horas o días concretos.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Plazos" associationDirection="None" sourceRef="TextAnnotation_Plazos" targetRef="Gateway_EsperaRespuesta" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_Funeraria" name="Atender y registrar solicitudes de cotización de servicios funerarios" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Funeraria">
+      <bpmn:lane id="Lane_Administracion" name="Administración">
+        <bpmn:flowNodeRef>Gateway_MergeDisponibilidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConsultarTarifario</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RevisarDisponibilidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_DefinirAlternativa</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Disponibilidad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CalcularImporte</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ElaborarCotizacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_VerificarCotizacion</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Atencion" name="Atención al cliente">
+        <bpmn:flowNodeRef>StartEvent_Solicitud</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarSolicitud</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RecopilarDatos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DatosSuficientes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_TimeoutDatos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Incompleta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IdentificarServicios</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarPendiente</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_DatosRecibidos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SolicitarDatos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EsperaDatos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ActualizarDatos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarAceptacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Aceptacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_TimeoutRespuesta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarSinRespuesta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ComunicarCotizacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarCotizacionEmitida</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EsperaRespuesta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Rechazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarRechazo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ActualizarRequerimientos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegistrarModificacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Modificacion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_MergeCierre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ArchivarSolicitud</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Cierre</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_Solicitud" name="Solicitud de cotización recibida">
+      <bpmn:messageEventDefinition id="MessageDef_Start" messageRef="Message_Solicitud" />
+    </bpmn:startEvent>
+    <bpmn:manualTask id="Task_RegistrarSolicitud" name="Registrar solicitud en cuaderno u hoja de control" />
+    <bpmn:manualTask id="Task_RecopilarDatos" name="Recopilar datos del solicitante y del servicio">
+      <bpmn:incoming>Flow_10</bpmn:incoming>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_DatosSuficientes" name="¿Información suficiente para cotizar?" gatewayDirection="Diverging" />
+    <bpmn:intermediateCatchEvent id="Event_TimeoutDatos" name="Plazo sin recibir datos">
+      <bpmn:timerEventDefinition id="TimerDef_Event_TimeoutDatos" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="EndEvent_Incompleta" name="Solicitud cerrada sin cotización" />
+    <bpmn:exclusiveGateway id="Gateway_MergeDisponibilidad" name="Continuar con propuesta" gatewayDirection="Converging">
+      <bpmn:incoming>Flow_18</bpmn:incoming>
+    </bpmn:exclusiveGateway>
+    <bpmn:dataObjectReference id="DataObjectRef_Agenda" name="Agenda / cuaderno de disponibilidad" dataObjectRef="DataObject_Agenda" />
+    <bpmn:dataObject id="DataObject_Agenda" />
+    <bpmn:dataStoreReference id="DataStoreRef_RegistroManual" name="Registro manual de solicitudes" dataStoreRef="DataStore_RegistroManual" />
+    <bpmn:manualTask id="Task_ConsultarTarifario" name="Consultar tarifario impreso vigente" />
+    <bpmn:dataObjectReference id="DataObjectRef_Tarifario" name="Tarifario impreso" dataObjectRef="DataObject_Tarifario" />
+    <bpmn:dataObject id="DataObject_Tarifario" />
+    <bpmn:manualTask id="Task_RevisarDisponibilidad" name="Revisar disponibilidad en agenda o cuaderno" />
+    <bpmn:manualTask id="Task_DefinirAlternativa" name="Definir alternativa disponible" />
+    <bpmn:exclusiveGateway id="Gateway_Disponibilidad" name="¿Servicios disponibles?" gatewayDirection="Diverging" />
+    <bpmn:manualTask id="Task_CalcularImporte" name="Calcular importe de la propuesta" />
+    <bpmn:manualTask id="Task_ElaborarCotizacion" name="Elaborar cotización manual" />
+    <bpmn:dataObjectReference id="DataObjectRef_Cotizacion" name="Cotización manual" dataObjectRef="DataObject_Cotizacion" />
+    <bpmn:dataObject id="DataObject_Cotizacion" />
+    <bpmn:manualTask id="Task_VerificarCotizacion" name="Verificar datos y monto de la cotización" />
+    <bpmn:manualTask id="Task_IdentificarServicios" name="Identificar servicios funerarios requeridos" />
+    <bpmn:manualTask id="Task_RegistrarPendiente" name="Registrar solicitud incompleta o pendiente" />
+    <bpmn:intermediateCatchEvent id="Event_DatosRecibidos" name="Datos adicionales recibidos">
+      <bpmn:messageEventDefinition id="MessageDef_Event_DatosRecibidos" messageRef="Message_DatosAdicionales" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:manualTask id="Task_SolicitarDatos" name="Solicitar datos faltantes al cliente" />
+    <bpmn:eventBasedGateway id="Gateway_EsperaDatos" name="Esperar datos del cliente" gatewayDirection="Diverging" />
+    <bpmn:manualTask id="Task_ActualizarDatos" name="Actualizar datos de la solicitud" />
+    <bpmn:manualTask id="Task_RegistrarAceptacion" name="Registrar aceptación de la cotización" />
+    <bpmn:intermediateCatchEvent id="Event_Aceptacion" name="Aceptación recibida">
+      <bpmn:messageEventDefinition id="MessageDef_Event_Aceptacion" messageRef="Message_Aceptacion" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="Event_TimeoutRespuesta" name="Plazo de seguimiento vencido">
+      <bpmn:timerEventDefinition id="TimerDef_Event_TimeoutRespuesta" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:manualTask id="Task_RegistrarSinRespuesta" name="Registrar cotización sin respuesta" />
+    <bpmn:manualTask id="Task_ComunicarCotizacion" name="Comunicar cotización al cliente" />
+    <bpmn:manualTask id="Task_RegistrarCotizacionEmitida" name="Registrar cotización emitida" />
+    <bpmn:eventBasedGateway id="Gateway_EsperaRespuesta" name="Esperar decisión del cliente" gatewayDirection="Diverging" />
+    <bpmn:intermediateCatchEvent id="Event_Rechazo" name="Rechazo recibido">
+      <bpmn:messageEventDefinition id="MessageDef_Event_Rechazo" messageRef="Message_Rechazo" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:manualTask id="Task_RegistrarRechazo" name="Registrar rechazo y motivo" />
+    <bpmn:manualTask id="Task_ActualizarRequerimientos" name="Actualizar requerimientos del cliente" />
+    <bpmn:manualTask id="Task_RegistrarModificacion" name="Registrar modificación solicitada" />
+    <bpmn:intermediateCatchEvent id="Event_Modificacion" name="Solicitud de modificación recibida">
+      <bpmn:messageEventDefinition id="MessageDef_Event_Modificacion" messageRef="Message_Modificacion" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="Gateway_MergeCierre" name="Consolidar cierre" gatewayDirection="Converging" />
+    <bpmn:manualTask id="Task_ArchivarSolicitud" name="Archivar solicitud y copia de la cotización" />
+    <bpmn:endEvent id="EndEvent_Cierre" name="Gestión de cotización finalizada" />
+    <bpmn:sequenceFlow id="Flow_01" sourceRef="StartEvent_Solicitud" targetRef="Task_RegistrarSolicitud" />
+    <bpmn:sequenceFlow id="Flow_02" sourceRef="Task_RegistrarSolicitud" targetRef="Task_RecopilarDatos" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_ActualizarDatos" targetRef="Task_RecopilarDatos" />
+    <bpmn:sequenceFlow id="Flow_03" sourceRef="Task_RecopilarDatos" targetRef="Gateway_DatosSuficientes" />
+    <bpmn:sequenceFlow id="Flow_04" name="Sí" sourceRef="Gateway_DatosSuficientes" targetRef="Task_IdentificarServicios" />
+    <bpmn:sequenceFlow id="Flow_05" name="No" sourceRef="Gateway_DatosSuficientes" targetRef="Task_SolicitarDatos" />
+    <bpmn:sequenceFlow id="Flow_08" name="Sin respuesta" sourceRef="Gateway_EsperaDatos" targetRef="Event_TimeoutDatos" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Event_TimeoutDatos" targetRef="Task_RegistrarPendiente" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_RegistrarPendiente" targetRef="EndEvent_Incompleta" />
+    <bpmn:sequenceFlow id="Flow_16" name="Sí" sourceRef="Gateway_Disponibilidad" targetRef="Gateway_MergeDisponibilidad" />
+    <bpmn:sequenceFlow id="Flow_18" sourceRef="Task_DefinirAlternativa" targetRef="Gateway_MergeDisponibilidad" />
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Gateway_MergeDisponibilidad" targetRef="Task_CalcularImporte" />
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_IdentificarServicios" targetRef="Task_ConsultarTarifario" />
+    <bpmn:sequenceFlow id="Flow_14" sourceRef="Task_ConsultarTarifario" targetRef="Task_RevisarDisponibilidad" />
+    <bpmn:sequenceFlow id="Flow_15" sourceRef="Task_RevisarDisponibilidad" targetRef="Gateway_Disponibilidad" />
+    <bpmn:sequenceFlow id="Flow_17" name="No" sourceRef="Gateway_Disponibilidad" targetRef="Task_DefinirAlternativa" />
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="Task_CalcularImporte" targetRef="Task_ElaborarCotizacion" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="Task_ElaborarCotizacion" targetRef="Task_VerificarCotizacion" />
+    <bpmn:sequenceFlow id="Flow_22" sourceRef="Task_VerificarCotizacion" targetRef="Task_ComunicarCotizacion" />
+    <bpmn:sequenceFlow id="Flow_33" name="Reelaborar cotización" sourceRef="Task_ActualizarRequerimientos" targetRef="Task_IdentificarServicios" />
+    <bpmn:sequenceFlow id="Flow_07" name="Datos recibidos" sourceRef="Gateway_EsperaDatos" targetRef="Event_DatosRecibidos" />
+    <bpmn:sequenceFlow id="Flow_09" sourceRef="Event_DatosRecibidos" targetRef="Task_ActualizarDatos" />
+    <bpmn:sequenceFlow id="Flow_06" sourceRef="Task_SolicitarDatos" targetRef="Gateway_EsperaDatos" />
+    <bpmn:sequenceFlow id="Flow_29" sourceRef="Event_Aceptacion" targetRef="Task_RegistrarAceptacion" />
+    <bpmn:sequenceFlow id="Flow_30" sourceRef="Task_RegistrarAceptacion" targetRef="Gateway_MergeCierre" />
+    <bpmn:sequenceFlow id="Flow_25" name="Acepta" sourceRef="Gateway_EsperaRespuesta" targetRef="Event_Aceptacion" />
+    <bpmn:sequenceFlow id="Flow_28" name="Sin respuesta" sourceRef="Gateway_EsperaRespuesta" targetRef="Event_TimeoutRespuesta" />
+    <bpmn:sequenceFlow id="Flow_36" sourceRef="Event_TimeoutRespuesta" targetRef="Task_RegistrarSinRespuesta" />
+    <bpmn:sequenceFlow id="Flow_37" sourceRef="Task_RegistrarSinRespuesta" targetRef="Gateway_MergeCierre" />
+    <bpmn:sequenceFlow id="Flow_23" sourceRef="Task_ComunicarCotizacion" targetRef="Task_RegistrarCotizacionEmitida" />
+    <bpmn:sequenceFlow id="Flow_24" sourceRef="Task_RegistrarCotizacionEmitida" targetRef="Gateway_EsperaRespuesta" />
+    <bpmn:sequenceFlow id="Flow_26" name="Solicita modificación" sourceRef="Gateway_EsperaRespuesta" targetRef="Event_Modificacion" />
+    <bpmn:sequenceFlow id="Flow_27" name="Rechaza" sourceRef="Gateway_EsperaRespuesta" targetRef="Event_Rechazo" />
+    <bpmn:sequenceFlow id="Flow_34" sourceRef="Event_Rechazo" targetRef="Task_RegistrarRechazo" />
+    <bpmn:sequenceFlow id="Flow_35" sourceRef="Task_RegistrarRechazo" targetRef="Gateway_MergeCierre" />
+    <bpmn:sequenceFlow id="Flow_32" sourceRef="Task_RegistrarModificacion" targetRef="Task_ActualizarRequerimientos" />
+    <bpmn:sequenceFlow id="Flow_31" sourceRef="Event_Modificacion" targetRef="Task_RegistrarModificacion" />
+    <bpmn:sequenceFlow id="Flow_38" sourceRef="Gateway_MergeCierre" targetRef="Task_ArchivarSolicitud" />
+    <bpmn:sequenceFlow id="Flow_39" sourceRef="Task_ArchivarSolicitud" targetRef="EndEvent_Cierre" />
+    <bpmn:association id="Association_RegistroSolicitud" associationDirection="One" sourceRef="Task_RegistrarSolicitud" targetRef="DataStoreRef_RegistroManual" />
+    <bpmn:association id="Association_Agenda" associationDirection="One" sourceRef="DataObjectRef_Agenda" targetRef="Task_RevisarDisponibilidad" />
+    <bpmn:association id="Association_ActualizarDatos" associationDirection="One" sourceRef="Task_ActualizarDatos" targetRef="DataStoreRef_RegistroManual" />
+    <bpmn:association id="Association_RegistroEmitida" associationDirection="One" sourceRef="Task_RegistrarCotizacionEmitida" targetRef="DataStoreRef_RegistroManual" />
+    <bpmn:association id="Association_RegistroAceptacion" associationDirection="One" sourceRef="Task_RegistrarAceptacion" targetRef="DataStoreRef_RegistroManual" />
+    <bpmn:association id="Association_RegistroModificacion" associationDirection="One" sourceRef="Task_RegistrarModificacion" targetRef="DataStoreRef_RegistroManual" />
+    <bpmn:association id="Association_RegistroRechazo" associationDirection="One" sourceRef="Task_RegistrarRechazo" targetRef="DataStoreRef_RegistroManual" />
+    <bpmn:association id="Association_RegistroSinResp" associationDirection="One" sourceRef="Task_RegistrarSinRespuesta" targetRef="DataStoreRef_RegistroManual" />
+    <bpmn:association id="Association_Tarifario" associationDirection="One" sourceRef="DataObjectRef_Tarifario" targetRef="Task_ConsultarTarifario" />
+    <bpmn:association id="Association_CotizacionOut" associationDirection="One" sourceRef="Task_ElaborarCotizacion" targetRef="DataObjectRef_Cotizacion" />
+    <bpmn:association id="Association_CotizacionCom" associationDirection="One" sourceRef="DataObjectRef_Cotizacion" targetRef="Task_ComunicarCotizacion" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_ASIS">
+    <bpmndi:BPMNPlane id="BPMNPlane_ASIS" bpmnElement="Collaboration_ASIS">
+      <bpmndi:BPMNShape id="Participant_Cliente_di" bpmnElement="Participant_Cliente" isHorizontal="true">
+        <dc:Bounds x="160" y="40" width="4100" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Funeraria_di" bpmnElement="Participant_Funeraria" isHorizontal="true">
+        <dc:Bounds x="160" y="180" width="4100" height="840" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Administracion_di" bpmnElement="Lane_Administracion" isHorizontal="true">
+        <dc:Bounds x="190" y="590" width="4070" height="430" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Atencion_di" bpmnElement="Lane_Atencion" isHorizontal="true">
+        <dc:Bounds x="190" y="180" width="4070" height="410" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_Solicitud_di" bpmnElement="StartEvent_Solicitud">
+        <dc:Bounds x="240" y="300" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="230" y="336" width="57" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarSolicitud_di" bpmnElement="Task_RegistrarSolicitud">
+        <dc:Bounds x="310" y="275" width="140" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RecopilarDatos_di" bpmnElement="Task_RecopilarDatos">
+        <dc:Bounds x="490" y="275" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DatosSuficientes_di" bpmnElement="Gateway_DatosSuficientes" isMarkerVisible="true">
+        <dc:Bounds x="680" y="290" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="669" y="240" width="72" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_TimeoutDatos_di" bpmnElement="Event_TimeoutDatos">
+        <dc:Bounds x="1070" y="497" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1049" y="533" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Incompleta_di" bpmnElement="EndEvent_Incompleta">
+        <dc:Bounds x="1360" y="497" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1337" y="533" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MergeDisponibilidad_di" bpmnElement="Gateway_MergeDisponibilidad" isMarkerVisible="true">
+        <dc:Bounds x="1660" y="655" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1650" y="617.5" width="69" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataObjectRef_Agenda_di" bpmnElement="DataObjectRef_Agenda">
+        <dc:Bounds x="1210" y="820" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1195" y="870" width="67" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataStoreRef_RegistroManual_di" bpmnElement="DataStoreRef_RegistroManual">
+        <dc:Bounds x="3770" y="850" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3754" y="812.5" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ConsultarTarifario_di" bpmnElement="Task_ConsultarTarifario">
+        <dc:Bounds x="1035" y="650" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataObjectRef_Tarifario_di" bpmnElement="DataObjectRef_Tarifario">
+        <dc:Bounds x="1085" y="830" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1062" y="880" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RevisarDisponibilidad_di" bpmnElement="Task_RevisarDisponibilidad">
+        <dc:Bounds x="1225" y="650" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_DefinirAlternativa_di" bpmnElement="Task_DefinirAlternativa">
+        <dc:Bounds x="1525" y="780" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Disponibilidad_di" bpmnElement="Gateway_Disponibilidad" isMarkerVisible="true">
+        <dc:Bounds x="1425" y="665" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1419" y="627.5" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CalcularImporte_di" bpmnElement="Task_CalcularImporte">
+        <dc:Bounds x="1815" y="650" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ElaborarCotizacion_di" bpmnElement="Task_ElaborarCotizacion">
+        <dc:Bounds x="2005" y="650" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DataObjectRef_Cotizacion_di" bpmnElement="DataObjectRef_Cotizacion">
+        <dc:Bounds x="2060" y="830" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2052" y="880" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerificarCotizacion_di" bpmnElement="Task_VerificarCotizacion">
+        <dc:Bounds x="2195" y="650" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_IdentificarServicios_di" bpmnElement="Task_IdentificarServicios">
+        <dc:Bounds x="1415" y="260" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarPendiente_di" bpmnElement="Task_RegistrarPendiente">
+        <dc:Bounds x="1160" y="475" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_DatosRecibidos_di" bpmnElement="Event_DatosRecibidos">
+        <dc:Bounds x="1112" y="417" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1087" y="453" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SolicitarDatos_di" bpmnElement="Task_SolicitarDatos">
+        <dc:Bounds x="745" y="475" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_EsperaDatos_di" bpmnElement="Gateway_EsperaDatos">
+        <dc:Bounds x="945" y="410" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="956" y="395.5" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ActualizarDatos_di" bpmnElement="Task_ActualizarDatos">
+        <dc:Bounds x="1255" y="350" width="150" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarAceptacion_di" bpmnElement="Task_RegistrarAceptacion">
+        <dc:Bounds x="3540" y="200" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Aceptacion_di" bpmnElement="Event_Aceptacion">
+        <dc:Bounds x="3132" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3123" y="258" width="55" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_TimeoutRespuesta_di" bpmnElement="Event_TimeoutRespuesta">
+        <dc:Bounds x="2912" y="497" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2900" y="533" width="60" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarSinRespuesta_di" bpmnElement="Task_RegistrarSinRespuesta">
+        <dc:Bounds x="3235" y="475" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ComunicarCotizacion_di" bpmnElement="Task_ComunicarCotizacion">
+        <dc:Bounds x="2315" y="278" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarCotizacionEmitida_di" bpmnElement="Task_RegistrarCotizacionEmitida">
+        <dc:Bounds x="2505" y="278" width="170" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_EsperaRespuesta_di" bpmnElement="Gateway_EsperaRespuesta">
+        <dc:Bounds x="2760" y="293" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2689" y="275.5" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Rechazo_di" bpmnElement="Event_Rechazo">
+        <dc:Bounds x="2882" y="417" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2858" y="453" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarRechazo_di" bpmnElement="Task_RegistrarRechazo">
+        <dc:Bounds x="3050" y="395" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ActualizarRequerimientos_di" bpmnElement="Task_ActualizarRequerimientos">
+        <dc:Bounds x="3390" y="295" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegistrarModificacion_di" bpmnElement="Task_RegistrarModificacion">
+        <dc:Bounds x="3180" y="295" width="160" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Modificacion_di" bpmnElement="Event_Modificacion">
+        <dc:Bounds x="3052" y="317" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3039" y="353" width="62" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MergeCierre_di" bpmnElement="Gateway_MergeCierre" isMarkerVisible="true">
+        <dc:Bounds x="3790" y="410" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3850" y="418" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ArchivarSolicitud_di" bpmnElement="Task_ArchivarSolicitud">
+        <dc:Bounds x="3970" y="395" width="180" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Cierre_di" bpmnElement="EndEvent_Cierre">
+        <dc:Bounds x="4202" y="417" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4193" y="453" width="54" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Association_Agenda_di" bpmnElement="Association_Agenda">
+        <di:waypoint x="1239" y="820" />
+        <di:waypoint x="1288" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Tarifario_di" bpmnElement="Association_Tarifario">
+        <di:waypoint x="1103" y="830" />
+        <di:waypoint x="1103" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_CotizacionOut_di" bpmnElement="Association_CotizacionOut">
+        <di:waypoint x="2085" y="730" />
+        <di:waypoint x="2085" y="830" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_ActualizarDatos_di" bpmnElement="Association_ActualizarDatos">
+        <di:waypoint x="1323" y="430" />
+        <di:waypoint x="1225" y="972" />
+        <di:waypoint x="3795" y="972" />
+        <di:waypoint x="3795" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_RegistroAceptacion_di" bpmnElement="Association_RegistroAceptacion">
+        <di:waypoint x="3587" y="280" />
+        <di:waypoint x="3040" y="952" />
+        <di:waypoint x="3795" y="952" />
+        <di:waypoint x="3795" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_RegistroSinResp_di" bpmnElement="Association_RegistroSinResp">
+        <di:waypoint x="3293" y="555" />
+        <di:waypoint x="3045" y="922" />
+        <di:waypoint x="3795" y="922" />
+        <di:waypoint x="3795" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Alcance_di" bpmnElement="Association_Alcance">
+        <di:waypoint x="2615" y="905" />
+        <di:waypoint x="2615" y="860" />
+        <di:waypoint x="2425" y="860" />
+        <di:waypoint x="2402" y="358" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_CotizacionCom_di" bpmnElement="Association_CotizacionCom">
+        <di:waypoint x="2078" y="830" />
+        <di:waypoint x="2290" y="820" />
+        <di:waypoint x="2290" y="355" />
+        <di:waypoint x="2319" y="356" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_RegistroEmitida_di" bpmnElement="Association_RegistroEmitida">
+        <di:waypoint x="2593" y="358" />
+        <di:waypoint x="2635" y="962" />
+        <di:waypoint x="3795" y="962" />
+        <di:waypoint x="3795" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Plazos_di" bpmnElement="Association_Plazos">
+        <di:waypoint x="2280" y="542" />
+        <di:waypoint x="2725" y="542" />
+        <di:waypoint x="2725" y="315" />
+        <di:waypoint x="2761" y="317" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_RegistroRechazo_di" bpmnElement="Association_RegistroRechazo">
+        <di:waypoint x="3123" y="475" />
+        <di:waypoint x="3040" y="932" />
+        <di:waypoint x="3795" y="932" />
+        <di:waypoint x="3795" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_RegistroModificacion_di" bpmnElement="Association_RegistroModificacion">
+        <di:waypoint x="3246" y="375" />
+        <di:waypoint x="3040" y="942" />
+        <di:waypoint x="3795" y="942" />
+        <di:waypoint x="3795" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="TextAnnotation_Canales_di" bpmnElement="TextAnnotation_Canales">
+        <dc:Bounds x="240" y="515" width="430" height="55" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_Alcance_di" bpmnElement="TextAnnotation_Alcance">
+        <dc:Bounds x="2260" y="905" width="710" height="55" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_Plazos_di" bpmnElement="TextAnnotation_Plazos">
+        <dc:Bounds x="1630" y="515" width="650" height="55" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_01_di" bpmnElement="Flow_01">
+        <di:waypoint x="276" y="318" />
+        <di:waypoint x="310" y="315" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02_di" bpmnElement="Flow_02">
+        <di:waypoint x="450" y="315" />
+        <di:waypoint x="490" y="315" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03_di" bpmnElement="Flow_03">
+        <di:waypoint x="640" y="315" />
+        <di:waypoint x="680" y="315" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04_di" bpmnElement="Flow_04">
+        <di:waypoint x="710" y="290" />
+        <di:waypoint x="1415" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1334" y="273" width="11" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05_di" bpmnElement="Flow_05">
+        <di:waypoint x="705" y="340" />
+        <di:waypoint x="705" y="515" />
+        <di:waypoint x="745" y="515" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="718" y="490" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06_di" bpmnElement="Flow_06">
+        <di:waypoint x="895" y="515" />
+        <di:waypoint x="910" y="515" />
+        <di:waypoint x="910" y="435" />
+        <di:waypoint x="945" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07_di" bpmnElement="Flow_07">
+        <di:waypoint x="995" y="435" />
+        <di:waypoint x="1112" y="435" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1017" y="438" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08_di" bpmnElement="Flow_08">
+        <di:waypoint x="970" y="460" />
+        <di:waypoint x="970" y="515" />
+        <di:waypoint x="1070" y="515" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="951" y="475" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09_di" bpmnElement="Flow_09">
+        <di:waypoint x="1148" y="435" />
+        <di:waypoint x="1210" y="435" />
+        <di:waypoint x="1210" y="460" />
+        <di:waypoint x="1330" y="460" />
+        <di:waypoint x="1330" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
+        <di:waypoint x="1255" y="390" />
+        <di:waypoint x="565" y="390" />
+        <di:waypoint x="565" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1106" y="515" />
+        <di:waypoint x="1160" y="515" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1320" y="515" />
+        <di:waypoint x="1360" y="515" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="1490" y="340" />
+        <di:waypoint x="1490" y="610" />
+        <di:waypoint x="940" y="610" />
+        <di:waypoint x="940" y="690" />
+        <di:waypoint x="1035" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16_di" bpmnElement="Flow_16">
+        <di:waypoint x="1475" y="690" />
+        <di:waypoint x="1568" y="690" />
+        <di:waypoint x="1568" y="680" />
+        <di:waypoint x="1660" y="680" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1516" y="665" width="11" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18">
+        <di:waypoint x="1610" y="780" />
+        <di:waypoint x="1610" y="743" />
+        <di:waypoint x="1685" y="743" />
+        <di:waypoint x="1685" y="705" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19">
+        <di:waypoint x="1710" y="680" />
+        <di:waypoint x="1763" y="680" />
+        <di:waypoint x="1763" y="690" />
+        <di:waypoint x="1815" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_22_di" bpmnElement="Flow_22">
+        <di:waypoint x="2270" y="650" />
+        <di:waypoint x="2270" y="318" />
+        <di:waypoint x="2315" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_23_di" bpmnElement="Flow_23">
+        <di:waypoint x="2485" y="318" />
+        <di:waypoint x="2505" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_24_di" bpmnElement="Flow_24">
+        <di:waypoint x="2675" y="318" />
+        <di:waypoint x="2760" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_25_di" bpmnElement="Flow_25">
+        <di:waypoint x="2785" y="293" />
+        <di:waypoint x="2785" y="240" />
+        <di:waypoint x="3132" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2812" y="217" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_26_di" bpmnElement="Flow_26">
+        <di:waypoint x="2810" y="318" />
+        <di:waypoint x="2931" y="318" />
+        <di:waypoint x="2931" y="335" />
+        <di:waypoint x="3052" y="335" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2949" y="306" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_27_di" bpmnElement="Flow_27">
+        <di:waypoint x="2810" y="318" />
+        <di:waypoint x="2830" y="318" />
+        <di:waypoint x="2830" y="435" />
+        <di:waypoint x="2882" y="435" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2838" y="393" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_28_di" bpmnElement="Flow_28">
+        <di:waypoint x="2785" y="343" />
+        <di:waypoint x="2785" y="515" />
+        <di:waypoint x="2912" y="515" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2796" y="490" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_29_di" bpmnElement="Flow_29">
+        <di:waypoint x="3168" y="240" />
+        <di:waypoint x="3540" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_30_di" bpmnElement="Flow_30">
+        <di:waypoint x="3700" y="240" />
+        <di:waypoint x="3815" y="240" />
+        <di:waypoint x="3815" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_31_di" bpmnElement="Flow_31">
+        <di:waypoint x="3088" y="335" />
+        <di:waypoint x="3180" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_32_di" bpmnElement="Flow_32">
+        <di:waypoint x="3340" y="335" />
+        <di:waypoint x="3390" y="335" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_33_di" bpmnElement="Flow_33">
+        <di:waypoint x="3470" y="295" />
+        <di:waypoint x="3470" y="195" />
+        <di:waypoint x="1490" y="195" />
+        <di:waypoint x="1490" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2462" y="146" width="55" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_34_di" bpmnElement="Flow_34">
+        <di:waypoint x="2918" y="435" />
+        <di:waypoint x="3050" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_35_di" bpmnElement="Flow_35">
+        <di:waypoint x="3210" y="435" />
+        <di:waypoint x="3790" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_36_di" bpmnElement="Flow_36">
+        <di:waypoint x="2948" y="515" />
+        <di:waypoint x="3235" y="515" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_37_di" bpmnElement="Flow_37">
+        <di:waypoint x="3405" y="515" />
+        <di:waypoint x="3815" y="515" />
+        <di:waypoint x="3815" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Canales_di" bpmnElement="Association_Canales">
+        <di:waypoint x="455" y="515" />
+        <di:waypoint x="455" y="490" />
+        <di:waypoint x="380" y="490" />
+        <di:waypoint x="380" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_RegistroSolicitud_di" bpmnElement="Association_RegistroSolicitud">
+        <di:waypoint x="380" y="355" />
+        <di:waypoint x="380" y="982" />
+        <di:waypoint x="3795" y="982" />
+        <di:waypoint x="3795" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
+        <di:waypoint x="1185" y="690" />
+        <di:waypoint x="1225" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15">
+        <di:waypoint x="1385" y="690" />
+        <di:waypoint x="1425" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17">
+        <di:waypoint x="1450" y="715" />
+        <di:waypoint x="1450" y="820" />
+        <di:waypoint x="1525" y="820" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1458" y="758" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_20_di" bpmnElement="Flow_20">
+        <di:waypoint x="1975" y="690" />
+        <di:waypoint x="2005" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_21_di" bpmnElement="Flow_21">
+        <di:waypoint x="2165" y="690" />
+        <di:waypoint x="2195" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_39_di" bpmnElement="Flow_39">
+        <di:waypoint x="4150" y="435" />
+        <di:waypoint x="4202" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_38_di" bpmnElement="Flow_38">
+        <di:waypoint x="3840" y="435" />
+        <di:waypoint x="3970" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Solicitud_di" bpmnElement="MessageFlow_Solicitud">
+        <di:waypoint x="258" y="140" />
+        <di:waypoint x="258" y="300" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="245" y="210" width="57" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_SolicitarDatos_di" bpmnElement="MessageFlow_SolicitarDatos">
+        <di:waypoint x="820" y="475" />
+        <di:waypoint x="820" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="792" y="298" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Datos_di" bpmnElement="MessageFlow_Datos">
+        <di:waypoint x="1130" y="140" />
+        <di:waypoint x="1130" y="417" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1102" y="269" width="87" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Cotizacion_di" bpmnElement="MessageFlow_Cotizacion">
+        <di:waypoint x="2400" y="278" />
+        <di:waypoint x="2400" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2409" y="235" width="52" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Aceptacion_di" bpmnElement="MessageFlow_Aceptacion">
+        <di:waypoint x="3150" y="140" />
+        <di:waypoint x="3150" y="222" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3152" y="153" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Modificacion_di" bpmnElement="MessageFlow_Modificacion">
+        <di:waypoint x="3070" y="140" />
+        <di:waypoint x="3070" y="317" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3039" y="273" width="62" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Rechazo_di" bpmnElement="MessageFlow_Rechazo">
+        <di:waypoint x="2900" y="140" />
+        <di:waypoint x="2900" y="417" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2879" y="276" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Entrega: LangChain 2026, LangGraph y LangSmith · Funeraria Velazquex</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 49, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #38bdf8;
+      --accent: #818cf8;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --code-bg: #0f172a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(129, 140, 248, 0.1) 0px, transparent 50%);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1.5rem;
+    }
+    .wrapper { max-width: 1200px; margin: 0 auto; }
+    header {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .brand h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .brand p { color: var(--text-muted); font-size: 0.95rem; font-family: 'Inter', sans-serif; margin-top: 0.25rem; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--primary);
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .card h2 {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #ffffff;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.75rem;
+    }
+    .card h3 { font-size: 1.15rem; color: var(--primary); margin: 1.5rem 0 0.75rem 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+    th {
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--primary);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    .terminal-header {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 0.75rem;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.red { background: #ef4444; }
+    .dot.yellow { background: #f59e0b; }
+    .dot.green { background: #10b981; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 850px) { .grid-2 { grid-template-columns: 1fr; } }
+    .langsmith-ui {
+      background: #0d131f;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+    .langsmith-header {
+      background: #1e293b;
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .tree-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.65rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+    }
+    .tree-row:hover { background: rgba(56, 189, 248, 0.05); }
+    .tree-indent { margin-left: 1.5rem; border-left: 2px solid rgba(56, 189, 248, 0.3); padding-left: 0.75rem; }
+    .tag-green { color: #34d399; font-weight: 600; }
+    .tag-yellow { color: #fbbf24; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <div class="brand">
+        <span class="badge">UPAO · Automatización Inteligente de Procesos · Sesión 09</span>
+        <h1>Funeraria Velazquex · Ecosistema LangChain 2026</h1>
+        <p>Informe Técnico de Arquitectura Multi-Agente, Topología LangGraph, Monitoreo LangSmith y Modelo BPMN TO-BE</p>
+      </div>
+      <div>
+        <span class="badge" style="background: rgba(52, 211, 153, 0.15); border-color: rgba(52, 211, 153, 0.3); color: var(--success);">
+          🟢 Estado: 100% Ejecutable & Verificado
+        </span>
+      </div>
+    </header>
+
+    <!-- SECCIÓN 1: LCEL -->
+    <section class="card">
+      <h2>1. Términos del LCEL Identificados en el Proyecto</h2>
+      <p>El <strong>LangChain Expression Language (LCEL)</strong> conecta declarativamente componentes unificados bajo la interfaz <code>Runnable</code> mediante el operador pipe (<code>|</code>).</p>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Término LCEL</th>
+            <th>Rol en el Sistema</th>
+            <th>Archivo en Repositorio</th>
+            <th>Ejemplo de Código en el Proyecto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ChatPromptTemplate</strong></td>
+            <td>Plantilla tipada con mensajes de sistema/humano y tono empático en duelo.</td>
+            <td><code>funeraria_velazquex/config.py</code></td>
+            <td><code>prompt = ChatPromptTemplate.from_messages([("system", PLANTILLAS_EMPATIA["condolencias"])])</code></td>
+          </tr>
+          <tr>
+            <td><strong>ChatModel / LLM</strong></td>
+            <td>Modelo unificado para extracción semántica y empatía conversacional.</td>
+            <td><code>funeraria_velazquex/agent_frontend.py</code></td>
+            <td><code>llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.2)</code></td>
+          </tr>
+          <tr>
+            <td><strong>OutputParser / with_structured_output</strong></td>
+            <td>Garantiza retornos tipados y validados estrictos con Pydantic V2.</td>
+            <td><code>funeraria_velazquex/models.py</code></td>
+            <td><code>extractor = prompt | llm.with_structured_output(SolicitudEntrada)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Operador Pipe (|)</strong></td>
+            <td>Composición declarativa funcional: <code>prompt | llm | parser</code>.</td>
+            <td><code>langgraph_funeraria_workflow.py</code></td>
+            <td><code>chain = prompt | llm | StrOutputParser()</code></td>
+          </tr>
+          <tr>
+            <td><strong>Tools & @tool</strong></td>
+            <td>Herramientas deterministas de consulta Excel con firmas y docstrings.</td>
+            <td><code>funeraria_velazquex/excel_service.py</code></td>
+            <td><code>@tool def tool_consultar_catalogo(servicio: str): ...</code></td>
+          </tr>
+          <tr>
+            <td><strong>Runnable (.invoke())</strong></td>
+            <td>Método universal de ejecución para modelos, chains, tools y grafos.</td>
+            <td><code>main.py</code> / <code>workflow.py</code></td>
+            <td><code>app.invoke(estado, config={"configurable": {"thread_id": "01"}})</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SECCIÓN 2: LANGGRAPH, GRADOS Y HITL -->
+    <section class="card">
+      <h2>2. LangGraph: Topología del Grafo, Grados y Supervisión HITL</h2>
+      <p>El flujo implementa un <strong>StateGraph</strong> con memoria compartida tipada (<code>EstadoCotizacion</code>), compuertas condicionales y paradas Human-in-the-Loop antes de acciones irreversibles.</p>
+      
+      <!-- DIAGRAMA NATIVO VECTORIAL SVG -->
+      <div style="background: rgba(11, 17, 32, 0.95); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 1.25rem; margin: 1.5rem 0; overflow-x: auto;">
+        <svg viewBox="0 0 1160 370" width="100%" height="330" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Outfit', sans-serif;">
+          <defs>
+            <marker id="rv-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+            </marker>
+            <marker id="rv-arrow-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#fbbf24" />
+            </marker>
+            <marker id="rv-arrow-succ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#34d399" />
+            </marker>
+            <linearGradient id="rv-grad-hitl" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#b45309" stop-opacity="0.85"/>
+              <stop offset="100%" stop-color="#78350f" stop-opacity="0.95"/>
+            </linearGradient>
+            <linearGradient id="rv-grad-node" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1e293b"/>
+              <stop offset="100%" stop-color="#0f172a"/>
+            </linearGradient>
+          </defs>
+
+          <!-- 1. START -->
+          <rect x="15" y="45" width="85" height="42" rx="21" fill="#065f46" stroke="#34d399" stroke-width="2"/>
+          <text x="57" y="71" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">START</text>
+          <line x1="100" y1="66" x2="128" y2="66" stroke="#38bdf8" stroke-width="2" marker-end="url(#rv-arrow)"/>
+
+          <!-- 2. recibir_solicitud -->
+          <rect x="130" y="36" width="135" height="60" rx="8" fill="url(#rv-grad-node)" stroke="#38bdf8" stroke-width="1.8"/>
+          <text x="197" y="60" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">recibir_solicitud</text>
+          <text x="197" y="79" fill="#94a3b8" font-size="10.5" text-anchor="middle">F_Start (Deudo)</text>
+          <line x1="265" y1="66" x2="293" y2="66" stroke="#38bdf8" stroke-width="2" marker-end="url(#rv-arrow)"/>
+
+          <!-- 3. validar_contrato (Compuerta) -->
+          <rect x="295" y="36" width="145" height="60" rx="8" fill="url(#rv-grad-node)" stroke="#818cf8" stroke-width="2"/>
+          <text x="367" y="59" fill="#818cf8" font-size="12" font-weight="700" text-anchor="middle">validar_contrato</text>
+          <text x="367" y="78" fill="#e2e8f0" font-size="10.5" text-anchor="middle">F_GW_Datos / Pydantic</text>
+
+          <!-- Rama Abajo: Incompleto -> solicitar_datos -->
+          <path d="M 367 96 L 367 150" stroke="#fbbf24" stroke-width="2" marker-end="url(#rv-arrow-warn)"/>
+          <rect x="372" y="112" width="80" height="18" rx="4" fill="#451a03" stroke="#fbbf24" stroke-width="1"/>
+          <text x="412" y="125" fill="#fde68a" font-size="9.5" text-anchor="middle">Incompleto</text>
+
+          <!-- 3b. solicitar_datos -->
+          <rect x="295" y="152" width="145" height="56" rx="8" fill="url(#rv-grad-node)" stroke="#fbbf24" stroke-width="1.5"/>
+          <text x="367" y="176" fill="#fbbf24" font-size="12" font-weight="700" text-anchor="middle">solicitar_datos</text>
+          <text x="367" y="195" fill="#94a3b8" font-size="10" text-anchor="middle">F_SolicitarDatos (MF02)</text>
+          <line x1="367" y1="208" x2="367" y2="250" stroke="#fbbf24" stroke-width="2" marker-end="url(#rv-arrow-warn)"/>
+          <rect x="305" y="252" width="125" height="34" rx="17" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+          <text x="367" y="274" fill="#fde68a" font-size="11" font-weight="700" text-anchor="middle">END (Espera P2D)</text>
+
+          <!-- Rama Derecha: Válido -> consultar_catalogo -->
+          <line x1="440" y1="66" x2="488" y2="66" stroke="#34d399" stroke-width="2" marker-end="url(#rv-arrow-succ)"/>
+          <rect x="445" y="48" width="40" height="16" rx="3" fill="#064e3b"/>
+          <text x="465" y="60" fill="#a7f3d0" font-size="9.5" font-weight="700" text-anchor="middle">Válido</text>
+
+          <!-- 4. consultar_catalogo (Compuerta) -->
+          <rect x="490" y="36" width="155" height="60" rx="8" fill="url(#rv-grad-node)" stroke="#38bdf8" stroke-width="2"/>
+          <text x="567" y="59" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">consultar_catalogo</text>
+          <text x="567" y="78" fill="#e2e8f0" font-size="10.5" text-anchor="middle">Excel pandas / F_GW_Disp</text>
+
+          <!-- Rama Abajo: Colmado -> definir_alternativa -->
+          <path d="M 567 96 L 567 150" stroke="#f87171" stroke-width="2" marker-end="url(#rv-arrow)"/>
+          <rect x="572" y="112" width="70" height="18" rx="4" fill="#450a0a" stroke="#f87171" stroke-width="1"/>
+          <text x="607" y="125" fill="#fecaca" font-size="9.5" text-anchor="middle">Colmado</text>
+
+          <!-- 4b. definir_alternativa -->
+          <rect x="490" y="152" width="155" height="56" rx="8" fill="url(#rv-grad-node)" stroke="#c084fc" stroke-width="1.8"/>
+          <text x="567" y="176" fill="#c084fc" font-size="12" font-weight="700" text-anchor="middle">definir_alternativa</text>
+          <text x="567" y="195" fill="#e2e8f0" font-size="10" text-anchor="middle">Sepelio Dignidad</text>
+          <path d="M 645 180 L 690 180 L 690 96" stroke="#c084fc" stroke-width="2" marker-end="url(#rv-arrow)"/>
+
+          <!-- Rama Derecha: Disp Sí -> calcular_cotizacion -->
+          <line x1="645" y1="66" x2="698" y2="66" stroke="#34d399" stroke-width="2" marker-end="url(#rv-arrow-succ)"/>
+          <rect x="650" y="48" width="45" height="16" rx="3" fill="#064e3b"/>
+          <text x="672" y="60" fill="#a7f3d0" font-size="9.5" font-weight="700" text-anchor="middle">Disp: Sí</text>
+
+          <!-- 5. calcular_cotizacion (NODO NEURÁLGICO) -->
+          <rect x="700" y="34" width="150" height="64" rx="8" fill="url(#rv-grad-node)" stroke="#818cf8" stroke-width="2.5"/>
+          <text x="775" y="58" fill="#818cf8" font-size="12" font-weight="700" text-anchor="middle">calcular_cotizacion</text>
+          <text x="775" y="75" fill="#f1f5f9" font-size="10" text-anchor="middle">Subtotal + IGV (18%)</text>
+          <text x="775" y="90" fill="#38bdf8" font-size="9" font-weight="700" text-anchor="middle">[Grado Total = 4]</text>
+
+          <!-- Rama Abajo: Requiere HITL -->
+          <path d="M 775 98 L 775 146" stroke="#f59e0b" stroke-width="2.2" marker-end="url(#rv-arrow-warn)"/>
+          <rect x="780" y="110" width="85" height="18" rx="4" fill="#451a03" stroke="#f59e0b" stroke-width="1"/>
+          <text x="822" y="123" fill="#fde68a" font-size="9" text-anchor="middle">> S/ 3,500 / Alt</text>
+
+          <!-- 6. hitl_supervisor (PUNTO HITL POR IRREVERSIBILIDAD) -->
+          <rect x="690" y="148" width="170" height="64" rx="10" fill="url(#rv-grad-hitl)" stroke="#fbbf24" stroke-width="2.5" stroke-dasharray="4,2"/>
+          <text x="775" y="172" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle">⏸️ hitl_supervisor</text>
+          <text x="775" y="189" fill="#fef08a" font-size="10" font-weight="700" text-anchor="middle">PARADA HITL DURABLE</text>
+          <text x="775" y="204" fill="#fef3c7" font-size="9" text-anchor="middle">interrupt_before (Gobernanza)</text>
+
+          <!-- Flecha HITL -> enviar -->
+          <path d="M 860 180 L 910 180 L 910 96" stroke="#34d399" stroke-width="2" marker-end="url(#rv-arrow-succ)"/>
+          <rect x="865" y="165" width="50" height="16" rx="3" fill="#064e3b"/>
+          <text x="890" y="177" fill="#a7f3d0" font-size="9" text-anchor="middle">Aprobado</text>
+          <line x1="850" y1="66" x2="918" y2="66" stroke="#38bdf8" stroke-width="2" marker-end="url(#rv-arrow)"/>
+
+          <!-- 7. enviar_cotizacion -->
+          <rect x="920" y="36" width="145" height="60" rx="8" fill="url(#rv-grad-node)" stroke="#38bdf8" stroke-width="2"/>
+          <text x="992" y="59" fill="#38bdf8" font-size="12" font-weight="700" text-anchor="middle">enviar_cotizacion</text>
+          <text x="992" y="78" fill="#e2e8f0" font-size="10.5" text-anchor="middle">F_EnviarCotizacion</text>
+          <path d="M 992 96 L 992 142" stroke="#38bdf8" stroke-width="2" marker-end="url(#rv-arrow)"/>
+
+          <!-- 8. archivar_registro -->
+          <rect x="920" y="144" width="145" height="52" rx="8" fill="url(#rv-grad-node)" stroke="#64748b" stroke-width="1.8"/>
+          <text x="992" y="166" fill="#94a3b8" font-size="11.5" font-weight="700" text-anchor="middle">archivar_registro</text>
+          <text x="992" y="184" fill="#cbd5e1" font-size="10" text-anchor="middle">DS_Central (Excel)</text>
+          <path d="M 992 196 L 992 238" stroke="#34d399" stroke-width="2" marker-end="url(#rv-arrow-succ)"/>
+
+          <!-- 9. END -->
+          <rect x="935" y="240" width="115" height="40" rx="20" fill="#065f46" stroke="#34d399" stroke-width="2"/>
+          <text x="992" y="265" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">END (Cerrado)</text>
+        </svg>
+      </div>
+
+      <h3>Cálculo Formal de Grados Topológicos (In-Degree / Out-Degree)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Nodo</th>
+            <th>In-Degree (Entrada)</th>
+            <th>Out-Degree (Salida)</th>
+            <th>Grado Total</th>
+            <th>Clasificación Topológica</th>
+            <th>Correspondencia BPMN TO-BE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>START</td><td>0</td><td>1</td><td>1</td><td>Fuente (Source)</td><td>MF01: Solicitud entrante</td></tr>
+          <tr><td>recibir_solicitud</td><td>1</td><td>1</td><td>2</td><td>Paso Lineal</td><td>F_Start: Recepción digital</td></tr>
+          <tr><td>validar_contrato</td><td>1</td><td>2</td><td>3</td><td>Compuerta Bifurcación</td><td>F_Validar / F_GW_Datos</td></tr>
+          <tr><td>solicitar_datos</td><td>1</td><td>1</td><td>2</td><td>Paso Terminal Temporal</td><td>F_SolicitarDatos</td></tr>
+          <tr><td>consultar_catalogo</td><td>1</td><td>2</td><td>3</td><td>Compuerta Bifurcación</td><td>F_ConsultarCatalogo / F_GW_Disponible</td></tr>
+          <tr><td>definir_alternativa</td><td>1</td><td>1</td><td>2</td><td>Paso de Adaptación</td><td>F_DefinirAlternativa</td></tr>
+          <tr><td>calcular_cotizacion</td><td>2</td><td>2</td><td>4</td><td>Convergencia + Bifurcación</td><td>F_GenerarCotizacion</td></tr>
+          <tr><td>hitl_supervisor</td><td>1</td><td>1</td><td>2</td><td>Punto HITL por Irreversibilidad</td><td>F_RevisarCotizacion / Supervisión</td></tr>
+          <tr><td>enviar_cotizacion</td><td>2</td><td>1</td><td>3</td><td>Convergencia de Despacho</td><td>F_EnviarCotizacion</td></tr>
+          <tr><td>archivar_registro</td><td>1</td><td>1</td><td>2</td><td>Paso de Persistencia</td><td>F_Archivar</td></tr>
+          <tr><td>END</td><td>2</td><td>0</td><td>2</td><td>Sumidero (Sink)</td><td>F_Fin: Proceso cerrado</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Supervisión Human-in-the-Loop (HITL) por Criterio de Irreversibilidad</h3>
+      <p>Siguiendo la <strong>Sesión 09 (Diapositivas 14 a 17)</strong>, el punto de intervención se ubica por <em>irreversibilidad</em> y no por importancia:</p>
+      <ul>
+        <li><strong>Cotizar es Reversible:</strong> No compromete dinero ni inventario. Interrumpir el 100% de cotizaciones sería un error de diseño.</li>
+        <li><strong>Reservar / Comprometer Capacidad es Irreversible:</strong> Bloquear un horno crematorio colmado o aplicar descuentos crea una obligación económica vinculante. Por ello, el nodo <code>hitl_supervisor</code> se pausa con <code>interrupt_before=["hitl_supervisor"]</code> mediante un <code>checkpointer=MemorySaver()</code> indexado por <code>thread_id</code>.</li>
+      </ul>
+    </section>
+
+    <!-- SECCIÓN 3: LANGSMITH -->
+    <section class="card">
+      <h2>3. Monitoreo y Observabilidad con LangSmith (Ejecución Real)</h2>
+      <p>Telemetría en tiempo real registrada tras ejecutar <code>langgraph_funeraria_workflow.py</code>. Los datos provienen del archivo <code>langsmith_trace_cotizacion.json</code>.</p>
+      
+      <div class="langsmith-ui">
+        <div class="langsmith-header">
+          <span>PROJECT: funeraria-velazquex-to-be · TRACE: 23bf89b2-e862-45fe-bbfb-272a04100da6</span>
+          <span class="tag-green">STATUS: SUCCESS (25.15 ms)</span>
+        </div>
+        <div class="tree-row">
+          <span>▼ <b>Pipeline_Cotizacion_Funeraria_Velazquex</b> [Chain]</span>
+          <span class="tag-green">25.15 ms</span>
+        </div>
+        <div class="tree-row tree-indent">
+          <span>├── Agente_FrontEnd_ValidarContrato [Chain]</span>
+          <span>2.10 ms</span>
+        </div>
+        <div class="tree-row tree-indent">
+          <span>├── Tool_Excel_ConsultarCatalogo [Tool: pandas]</span>
+          <span>4.30 ms</span>
+        </div>
+        <div class="tree-row tree-indent">
+          <span>├── Tool_Excel_VerificarDisponibilidad [Tool: pandas]</span>
+          <span>3.80 ms</span>
+        </div>
+        <div class="tree-row tree-indent">
+          <span>├── Agente_BackEnd_CalcularCotizacion [Chain]</span>
+          <span>1.50 ms</span>
+        </div>
+        <div class="tree-row tree-indent">
+          <span>├── ⏸️ <b>HITL_Supervisor_IntervencionHumana</b> [Interrupt: Checked]</span>
+          <span class="tag-yellow">PAUSED ➔ APPROVED (S/ 3,304.00 PEN)</span>
+        </div>
+        <div class="tree-row tree-indent">
+          <span>└── Agente_FrontEnd_DespachoEmpatico [Chain]</span>
+          <span>3.20 ms</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <h3>Gobernanza y TCO (Slide 8)</h3>
+          <ul>
+            <li><strong>Latencia Total:</strong> 25.15 milisegundos (vs. 50 minutos manuales).</li>
+            <li><strong>Costo Operativo Unitario:</strong> S/ 0.00 (100% ahorro vs. S/ 3.66 en línea base).</li>
+            <li><strong>Persistencia de Estado:</strong> Checkpoint en memoria indexado por <code>caso-upao-073ba0</code>.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Evaluación Continua LLM-as-Judge</h3>
+          <ul>
+            <li><strong>Score de Empatía en Duelo:</strong> 98% (Condolencias y calidez).</li>
+            <li><strong>Score de Exactitud Tarifaria:</strong> 100% (Subtotal S/ 2,800 + IGV S/ 504 = S/ 3,304 PEN).</li>
+            <li><strong>Score de Contrato Pydantic:</strong> 100% (Sin campos nulos requeridos).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: DEEP AGENTS -->
+    <section class="card">
+      <h2>4. Deep Agents Generados y Justificación Teórica</h2>
+      <p>Aplicación rigurosa de la <strong>Regla de las Dos Condiciones</strong> de la Sesión 09: C1 (Especialización Incompatible), C2 (Aislamiento de Contexto) y C3 (Frontera de Permisos).</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Agente / Módulo</th>
+            <th>C1: Especialización</th>
+            <th>C2: Aislamiento Contexto</th>
+            <th>C3: Frontera Permisos</th>
+            <th>Total Condiciones</th>
+            <th>Veredicto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Agente Front-End (Atención y Empatía)</strong></td>
+            <td>SÍ (Empatía de duelo incompatible con cálculos)</td>
+            <td>SÍ (No ve costos brutos ni tablas de Excel)</td>
+            <td>NO</td>
+            <td><strong>2 Condiciones</strong></td>
+            <td><span class="tag-green">AGENTE JUSTIFICADO</span></td>
+          </tr>
+          <tr>
+            <td><strong>Agente Back-End (Administración y Stock)</strong></td>
+            <td>SÍ (Rigor numérico e impuestos)</td>
+            <td>SÍ (Procesa tablas masivas de pandas)</td>
+            <td>SÍ (Acceso exclusivo a DS_Central y DLQ)</td>
+            <td><strong>3 Condiciones</strong></td>
+            <td><span class="tag-green">AGENTE JUSTIFICADO</span></td>
+          </tr>
+          <tr>
+            <td><strong>Agente Supervisor (Orquestador de Flujo)</strong></td>
+            <td>SÍ (Coordinación y gobernanza de compuertas)</td>
+            <td>SÍ (Centraliza el estado único del grafo)</td>
+            <td>SÍ (Pausa el sistema en puntos HITL)</td>
+            <td><strong>3 Condiciones</strong></td>
+            <td><span class="tag-green">AGENTE JUSTIFICADO (Patrón Supervisor)</span></td>
+          </tr>
+          <tr>
+            <td><em>Consulta de Disponibilidad de Fecha</em></td>
+            <td>NO (Determinista)</td>
+            <td>NO (Booleano)</td>
+            <td>NO</td>
+            <td><strong>0 Condiciones</strong></td>
+            <td><span class="tag-yellow">HERRAMIENTA (@tool)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SECCIÓN 5: CUATRO CAPAS -->
+    <section class="card">
+      <h2>5. Las Cuatro Capas del Ecosistema LangChain en el Proyecto</h2>
+      <div class="grid-2">
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--card-border);">
+          <h3 style="margin-top:0;">Capa 1: LangChain Core (Fundación)</h3>
+          <p>Bloques de construcción elementales y sintaxis declarativa LCEL (<code>|</code>). Modelos de datos Pydantic 2 (<code>SolicitudEntrada</code>, <code>Cotizacion</code>), <code>ChatPromptTemplate</code> de condolencias y decoradores <code>@tool</code> para consultas Excel.</p>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--card-border);">
+          <h3 style="margin-top:0;">Capa 2: LangGraph (Orquestación)</h3>
+          <p>Motor runtime para flujos cíclicos con memoria de estado (<code>StateGraph</code>). Modela compuertas exclusivas de BPMN mediante aristas condicionales y administra paradas <code>interrupt_before</code> (HITL) con checkpointers durables.</p>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--card-border);">
+          <h3 style="margin-top:0;">Capa 3: LangSmith (Observabilidad)</h3>
+          <p>Plataforma de gobernanza, auditoría y trazabilidad extrema. Desglosa latencias a milisegundo por nodo, supervisa las llamadas a tools de pandas y evalúa la calidad empática y consistencia fiscal.</p>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.6); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--card-border);">
+          <h3 style="margin-top:0;">Capa 4: Deep Agents (Harness)</h3>
+          <p>Infraestructura multiagente bajo el <strong>Patrón Supervisor</strong>. Desacopla al Agente Front-End (contención en duelo) y al Agente Back-End (cálculos e inventario), aplicando el ciclo de autoverificación y adaptación de alternativas.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+[
+  {
+    "id_caso": "SOL-2026-006",
+    "timestamp": "2026-10-17 18:00:37",
+    "error": "El servicio 'AtaudPremium' no pertenece al catálogo disponible de la funeraria.",
+    "clase_error": "De datos / Catálogo",
+    "carga_original": {
+      "servicio_solicitado": "AtaudPremium",
+      "id_solicitud": "SOL-2026-006"
+    },
+    "reintentos": 0
+  }
+]

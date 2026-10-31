@@ -1,0 +1,587 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_TO_BE_Funeraria" targetNamespace="http://funeraria-velazquex/to-be">
+  <message id="Message_Solicitud" name="Solicitud digital de cotización"/>
+  <message id="Message_DatosFaltantes" name="Solicitud de datos faltantes"/>
+  <message id="Message_DatosCompletados" name="Datos completados"/>
+  <message id="Message_Cotizacion" name="Cotización digital"/>
+  <message id="Message_Aceptacion" name="Aceptación"/>
+  <message id="Message_Modificacion" name="Solicitud de modificación"/>
+  <message id="Message_Rechazo" name="Rechazo"/>
+  <message id="Message_Recordatorio" name="Recordatorio"/>
+  <dataStore id="DataStore_Central" name="Repositorio central de solicitudes y cotizaciones"/>
+  <dataStore id="DataStore_Catalogo" name="Catálogo digital de servicios y precios"/>
+  <dataStore id="DataStore_Disponibilidad" name="Disponibilidad de servicios"/>
+  <process id="Process_Cliente" name="Cliente" isExecutable="false">
+    <startEvent id="C_Start" name="Necesita cotización"/>
+    <userTask id="C_Completar" name="Completar solicitud digital"/>
+    <sendTask id="C_Enviar" name="Enviar solicitud"/>
+    <eventBasedGateway id="C_Esperar" name="Esperar respuesta de la funeraria"/>
+    <intermediateCatchEvent id="C_DatosFaltantes" name="Recibir solicitud de datos faltantes">
+      <messageEventDefinition messageRef="Message_DatosFaltantes"/>
+    </intermediateCatchEvent>
+    <userTask id="C_CompletarDatos" name="Completar datos faltantes"/>
+    <sendTask id="C_ReenviarDatos" name="Enviar datos completados"/>
+    <intermediateCatchEvent id="C_RecibirCotizacion" name="Recibir cotización">
+      <messageEventDefinition messageRef="Message_Cotizacion"/>
+    </intermediateCatchEvent>
+    <exclusiveGateway id="C_Decision" name="¿Qué decide el cliente?"/>
+    <sendTask id="C_Aceptar" name="Aceptar cotización"/>
+    <sendTask id="C_Modificar" name="Solicitar modificación"/>
+    <sendTask id="C_Rechazar" name="Rechazar cotización"/>
+    <endEvent id="C_FinAceptar" name="Cotización aceptada"/>
+    <endEvent id="C_FinModificar" name="Modificación solicitada"/>
+    <endEvent id="C_FinRechazar" name="Cotización rechazada"/>
+    <sequenceFlow id="CF01" sourceRef="C_Start" targetRef="C_Completar"/>
+    <sequenceFlow id="CF02" sourceRef="C_Completar" targetRef="C_Enviar"/>
+    <sequenceFlow id="CF03" sourceRef="C_Enviar" targetRef="C_Esperar"/>
+    <sequenceFlow id="CF04" sourceRef="C_Esperar" targetRef="C_DatosFaltantes"/>
+    <sequenceFlow id="CF05" sourceRef="C_DatosFaltantes" targetRef="C_CompletarDatos"/>
+    <sequenceFlow id="CF06" sourceRef="C_CompletarDatos" targetRef="C_ReenviarDatos"/>
+    <sequenceFlow id="CF07" sourceRef="C_ReenviarDatos" targetRef="C_Esperar"/>
+    <sequenceFlow id="CF08" sourceRef="C_Esperar" targetRef="C_RecibirCotizacion"/>
+    <sequenceFlow id="CF09" sourceRef="C_RecibirCotizacion" targetRef="C_Decision"/>
+    <sequenceFlow id="CF10" sourceRef="C_Decision" targetRef="C_Aceptar" name="Aceptar"/>
+    <sequenceFlow id="CF11" sourceRef="C_Decision" targetRef="C_Modificar" name="Modificar"/>
+    <sequenceFlow id="CF12" sourceRef="C_Decision" targetRef="C_Rechazar" name="Rechazar"/>
+    <sequenceFlow id="CF13" sourceRef="C_Aceptar" targetRef="C_FinAceptar"/>
+    <sequenceFlow id="CF14" sourceRef="C_Modificar" targetRef="C_FinModificar"/>
+    <sequenceFlow id="CF15" sourceRef="C_Rechazar" targetRef="C_FinRechazar"/>
+  </process>
+  <process id="Process_Funeraria" name="Atender y registrar solicitudes de cotización de servicios funerarios - TO-BE" isExecutable="false">
+    <laneSet id="LaneSet_Funeraria">
+      <lane id="Lane_Atencion" name="Atención al cliente">
+        <flowNodeRef>F_Start</flowNodeRef>
+        <flowNodeRef>F_SolicitarDatos</flowNodeRef>
+        <flowNodeRef>F_GW_EsperaDatos</flowNodeRef>
+        <flowNodeRef>F_DatosRecibidos</flowNodeRef>
+        <flowNodeRef>F_TimeoutDatos</flowNodeRef>
+        <flowNodeRef>F_DefinirAlternativa</flowNodeRef>
+        <flowNodeRef>F_RevisarCotizacion</flowNodeRef>
+        <flowNodeRef>F_EnviarCotizacion</flowNodeRef>
+        <flowNodeRef>F_GW_EsperaDecision</flowNodeRef>
+        <flowNodeRef>F_Aceptacion</flowNodeRef>
+        <flowNodeRef>F_Modificacion</flowNodeRef>
+        <flowNodeRef>F_Rechazo</flowNodeRef>
+        <flowNodeRef>F_TimeoutDecision</flowNodeRef>
+        <flowNodeRef>F_RevisarModificacion</flowNodeRef>
+        <flowNodeRef>F_Recordatorio</flowNodeRef>
+        <flowNodeRef>F_GW_EsperaFinal</flowNodeRef>
+        <flowNodeRef>F_Aceptacion2</flowNodeRef>
+        <flowNodeRef>F_Modificacion2</flowNodeRef>
+        <flowNodeRef>F_Rechazo2</flowNodeRef>
+        <flowNodeRef>F_TimeoutFinal</flowNodeRef>
+      </lane>
+      <lane id="Lane_Administracion" name="Administración">
+        <flowNodeRef>F_Registrar</flowNodeRef>
+        <flowNodeRef>F_Validar</flowNodeRef>
+        <flowNodeRef>F_GW_Datos</flowNodeRef>
+        <flowNodeRef>F_Actualizar</flowNodeRef>
+        <flowNodeRef>F_Incompleta</flowNodeRef>
+        <flowNodeRef>F_FinIncompleta</flowNodeRef>
+        <flowNodeRef>F_ConsultarCatalogo</flowNodeRef>
+        <flowNodeRef>F_VerificarDisponibilidad</flowNodeRef>
+        <flowNodeRef>F_GW_Disponible</flowNodeRef>
+        <flowNodeRef>F_GW_UnirDisponibilidad</flowNodeRef>
+        <flowNodeRef>F_GenerarCotizacion</flowNodeRef>
+        <flowNodeRef>F_RegistrarEmision</flowNodeRef>
+        <flowNodeRef>F_RegistrarAceptacion</flowNodeRef>
+        <flowNodeRef>F_RegistrarRechazo</flowNodeRef>
+        <flowNodeRef>F_RegistrarSinRespuesta</flowNodeRef>
+        <flowNodeRef>F_GW_Cierre</flowNodeRef>
+        <flowNodeRef>F_Archivar</flowNodeRef>
+        <flowNodeRef>F_Fin</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="F_Start" name="Solicitud digital recibida">
+      <messageEventDefinition messageRef="Message_Solicitud"/>
+    </startEvent>
+    <serviceTask id="F_Registrar" name="Registrar solicitud automáticamente"/>
+    <serviceTask id="F_Validar" name="Validar información"/>
+    <exclusiveGateway id="F_GW_Datos" name="¿Datos completos?"/>
+    <sendTask id="F_SolicitarDatos" name="Solicitar datos faltantes"/>
+    <eventBasedGateway id="F_GW_EsperaDatos" name="Esperar datos del cliente"/>
+    <intermediateCatchEvent id="F_DatosRecibidos" name="Datos completados">
+      <messageEventDefinition messageRef="Message_DatosCompletados"/>
+    </intermediateCatchEvent>
+    <serviceTask id="F_Actualizar" name="Actualizar solicitud"/>
+    <intermediateCatchEvent id="F_TimeoutDatos" name="Plazo sin recibir datos">
+      <timerEventDefinition>
+        <timeDuration>P2D</timeDuration>
+      </timerEventDefinition>
+    </intermediateCatchEvent>
+    <serviceTask id="F_Incompleta" name="Registrar solicitud incompleta"/>
+    <endEvent id="F_FinIncompleta" name="Solicitud incompleta"/>
+    <serviceTask id="F_ConsultarCatalogo" name="Consultar servicios y precios"/>
+    <serviceTask id="F_VerificarDisponibilidad" name="Verificar disponibilidad"/>
+    <exclusiveGateway id="F_GW_Disponible" name="¿Servicio disponible?"/>
+    <userTask id="F_DefinirAlternativa" name="Definir alternativa"/>
+    <exclusiveGateway id="F_GW_UnirDisponibilidad" name="Unir disponibilidad"/>
+    <serviceTask id="F_GenerarCotizacion" name="Generar cotización"/>
+    <userTask id="F_RevisarCotizacion" name="Revisar cotización"/>
+    <sendTask id="F_EnviarCotizacion" name="Enviar cotización al cliente"/>
+    <serviceTask id="F_RegistrarEmision" name="Registrar emisión y programar seguimiento"/>
+    <eventBasedGateway id="F_GW_EsperaDecision" name="Esperar decisión del cliente"/>
+    <intermediateCatchEvent id="F_Aceptacion" name="Aceptación recibida">
+      <messageEventDefinition messageRef="Message_Aceptacion"/>
+    </intermediateCatchEvent>
+    <intermediateCatchEvent id="F_Modificacion" name="Modificación recibida">
+      <messageEventDefinition messageRef="Message_Modificacion"/>
+    </intermediateCatchEvent>
+    <intermediateCatchEvent id="F_Rechazo" name="Rechazo recibido">
+      <messageEventDefinition messageRef="Message_Rechazo"/>
+    </intermediateCatchEvent>
+    <intermediateCatchEvent id="F_TimeoutDecision" name="Plazo de seguimiento vencido">
+      <timerEventDefinition>
+        <timeDuration>P2D</timeDuration>
+      </timerEventDefinition>
+    </intermediateCatchEvent>
+    <serviceTask id="F_RegistrarAceptacion" name="Registrar aceptación"/>
+    <userTask id="F_RevisarModificacion" name="Revisar cambios solicitados"/>
+    <serviceTask id="F_RegistrarRechazo" name="Registrar rechazo"/>
+    <sendTask id="F_Recordatorio" name="Enviar recordatorio"/>
+    <eventBasedGateway id="F_GW_EsperaFinal" name="Esperar respuesta final"/>
+    <intermediateCatchEvent id="F_Aceptacion2" name="Aceptación recibida">
+      <messageEventDefinition messageRef="Message_Aceptacion"/>
+    </intermediateCatchEvent>
+    <intermediateCatchEvent id="F_Modificacion2" name="Modificación recibida">
+      <messageEventDefinition messageRef="Message_Modificacion"/>
+    </intermediateCatchEvent>
+    <intermediateCatchEvent id="F_Rechazo2" name="Rechazo recibido">
+      <messageEventDefinition messageRef="Message_Rechazo"/>
+    </intermediateCatchEvent>
+    <intermediateCatchEvent id="F_TimeoutFinal" name="Sin respuesta">
+      <timerEventDefinition>
+        <timeDuration>P2D</timeDuration>
+      </timerEventDefinition>
+    </intermediateCatchEvent>
+    <serviceTask id="F_RegistrarSinRespuesta" name="Registrar sin respuesta"/>
+    <exclusiveGateway id="F_GW_Cierre" name="Unir cierre"/>
+    <serviceTask id="F_Archivar" name="Archivar solicitud"/>
+    <endEvent id="F_Fin" name="Solicitud cerrada"/>
+    <sequenceFlow id="F01" sourceRef="F_Start" targetRef="F_Registrar"/>
+    <sequenceFlow id="F02" sourceRef="F_Registrar" targetRef="F_Validar"/>
+    <sequenceFlow id="F03" sourceRef="F_Validar" targetRef="F_GW_Datos"/>
+    <sequenceFlow id="F04" sourceRef="F_GW_Datos" targetRef="F_ConsultarCatalogo" name="Sí"/>
+    <sequenceFlow id="F05" sourceRef="F_GW_Datos" targetRef="F_SolicitarDatos" name="No"/>
+    <sequenceFlow id="F06" sourceRef="F_SolicitarDatos" targetRef="F_GW_EsperaDatos"/>
+    <sequenceFlow id="F07" sourceRef="F_GW_EsperaDatos" targetRef="F_DatosRecibidos"/>
+    <sequenceFlow id="F08" sourceRef="F_DatosRecibidos" targetRef="F_Actualizar"/>
+    <sequenceFlow id="F09" sourceRef="F_Actualizar" targetRef="F_Validar"/>
+    <sequenceFlow id="F10" sourceRef="F_GW_EsperaDatos" targetRef="F_TimeoutDatos"/>
+    <sequenceFlow id="F11" sourceRef="F_TimeoutDatos" targetRef="F_Incompleta"/>
+    <sequenceFlow id="F12" sourceRef="F_Incompleta" targetRef="F_FinIncompleta"/>
+    <sequenceFlow id="F13" sourceRef="F_ConsultarCatalogo" targetRef="F_VerificarDisponibilidad"/>
+    <sequenceFlow id="F14" sourceRef="F_VerificarDisponibilidad" targetRef="F_GW_Disponible"/>
+    <sequenceFlow id="F15" sourceRef="F_GW_Disponible" targetRef="F_GW_UnirDisponibilidad" name="Sí"/>
+    <sequenceFlow id="F16" sourceRef="F_GW_Disponible" targetRef="F_DefinirAlternativa" name="No"/>
+    <sequenceFlow id="F17" sourceRef="F_DefinirAlternativa" targetRef="F_GW_UnirDisponibilidad"/>
+    <sequenceFlow id="F18" sourceRef="F_GW_UnirDisponibilidad" targetRef="F_GenerarCotizacion"/>
+    <sequenceFlow id="F19" sourceRef="F_GenerarCotizacion" targetRef="F_RevisarCotizacion"/>
+    <sequenceFlow id="F20" sourceRef="F_RevisarCotizacion" targetRef="F_EnviarCotizacion"/>
+    <sequenceFlow id="F21" sourceRef="F_EnviarCotizacion" targetRef="F_RegistrarEmision"/>
+    <sequenceFlow id="F22" sourceRef="F_RegistrarEmision" targetRef="F_GW_EsperaDecision"/>
+    <sequenceFlow id="F23" sourceRef="F_GW_EsperaDecision" targetRef="F_Aceptacion"/>
+    <sequenceFlow id="F24" sourceRef="F_Aceptacion" targetRef="F_RegistrarAceptacion"/>
+    <sequenceFlow id="F25" sourceRef="F_RegistrarAceptacion" targetRef="F_GW_Cierre"/>
+    <sequenceFlow id="F26" sourceRef="F_GW_EsperaDecision" targetRef="F_Modificacion"/>
+    <sequenceFlow id="F27" sourceRef="F_Modificacion" targetRef="F_RevisarModificacion"/>
+    <sequenceFlow id="F28" sourceRef="F_RevisarModificacion" targetRef="F_ConsultarCatalogo"/>
+    <sequenceFlow id="F29" sourceRef="F_GW_EsperaDecision" targetRef="F_Rechazo"/>
+    <sequenceFlow id="F30" sourceRef="F_Rechazo" targetRef="F_RegistrarRechazo"/>
+    <sequenceFlow id="F31" sourceRef="F_RegistrarRechazo" targetRef="F_GW_Cierre"/>
+    <sequenceFlow id="F32" sourceRef="F_GW_EsperaDecision" targetRef="F_TimeoutDecision"/>
+    <sequenceFlow id="F33" sourceRef="F_TimeoutDecision" targetRef="F_Recordatorio"/>
+    <sequenceFlow id="F34" sourceRef="F_Recordatorio" targetRef="F_GW_EsperaFinal"/>
+    <sequenceFlow id="F35" sourceRef="F_GW_EsperaFinal" targetRef="F_Aceptacion2"/>
+    <sequenceFlow id="F36" sourceRef="F_Aceptacion2" targetRef="F_RegistrarAceptacion"/>
+    <sequenceFlow id="F37" sourceRef="F_GW_EsperaFinal" targetRef="F_Modificacion2"/>
+    <sequenceFlow id="F38" sourceRef="F_Modificacion2" targetRef="F_RevisarModificacion"/>
+    <sequenceFlow id="F39" sourceRef="F_GW_EsperaFinal" targetRef="F_Rechazo2"/>
+    <sequenceFlow id="F40" sourceRef="F_Rechazo2" targetRef="F_RegistrarRechazo"/>
+    <sequenceFlow id="F41" sourceRef="F_GW_EsperaFinal" targetRef="F_TimeoutFinal"/>
+    <sequenceFlow id="F42" sourceRef="F_TimeoutFinal" targetRef="F_RegistrarSinRespuesta"/>
+    <sequenceFlow id="F43" sourceRef="F_RegistrarSinRespuesta" targetRef="F_GW_Cierre"/>
+    <sequenceFlow id="F44" sourceRef="F_GW_Cierre" targetRef="F_Archivar"/>
+    <sequenceFlow id="F45" sourceRef="F_Archivar" targetRef="F_Fin"/>
+    <dataStoreReference id="DS_Central" name="Repositorio central" dataStoreRef="DataStore_Central"/>
+    <dataStoreReference id="DS_Catalogo" name="Catálogo digital" dataStoreRef="DataStore_Catalogo"/>
+    <dataStoreReference id="DS_Disponibilidad" name="Disponibilidad" dataStoreRef="DataStore_Disponibilidad"/>
+    <association id="A01" sourceRef="F_Registrar" targetRef="DS_Central"/>
+    <association id="A02" sourceRef="F_Actualizar" targetRef="DS_Central"/>
+    <association id="A03" sourceRef="F_ConsultarCatalogo" targetRef="DS_Catalogo"/>
+    <association id="A04" sourceRef="F_VerificarDisponibilidad" targetRef="DS_Disponibilidad"/>
+    <association id="A05" sourceRef="F_GenerarCotizacion" targetRef="DS_Central"/>
+    <association id="A06" sourceRef="F_RegistrarEmision" targetRef="DS_Central"/>
+    <association id="A07" sourceRef="F_RegistrarAceptacion" targetRef="DS_Central"/>
+    <association id="A08" sourceRef="F_RegistrarRechazo" targetRef="DS_Central"/>
+    <association id="A09" sourceRef="F_RegistrarSinRespuesta" targetRef="DS_Central"/>
+    <textAnnotation id="Annotation_Alcance">
+      <text>Alcance TO-BE: desde la solicitud digital de cotización hasta su registro y cierre. Contratación, pago y ejecución del servicio funerario permanecen fuera de alcance.</text>
+    </textAnnotation>
+    <association id="A10" sourceRef="F_GenerarCotizacion" targetRef="Annotation_Alcance"/>
+  </process>
+  <collaboration id="Collaboration_TO_BE">
+    <participant id="Participant_Cliente" name="Cliente" processRef="Process_Cliente"/>
+    <participant id="Participant_Funeraria" name="Funeraria Velazquex" processRef="Process_Funeraria"/>
+    <messageFlow id="MF01" sourceRef="C_Enviar" targetRef="F_Start" name="Solicitud digital" messageRef="Message_Solicitud"/>
+    <messageFlow id="MF02" sourceRef="F_SolicitarDatos" targetRef="C_DatosFaltantes" name="Datos faltantes" messageRef="Message_DatosFaltantes"/>
+    <messageFlow id="MF03" sourceRef="C_ReenviarDatos" targetRef="F_DatosRecibidos" name="Datos completados" messageRef="Message_DatosCompletados"/>
+    <messageFlow id="MF04" sourceRef="F_EnviarCotizacion" targetRef="C_RecibirCotizacion" name="Cotización" messageRef="Message_Cotizacion"/>
+    <messageFlow id="MF05" sourceRef="C_Aceptar" targetRef="F_Aceptacion" name="Aceptación" messageRef="Message_Aceptacion"/>
+    <messageFlow id="MF06" sourceRef="C_Modificar" targetRef="F_Modificacion" name="Modificación" messageRef="Message_Modificacion"/>
+    <messageFlow id="MF07" sourceRef="C_Rechazar" targetRef="F_Rechazo" name="Rechazo" messageRef="Message_Rechazo"/>
+    <messageFlow id="MF08" sourceRef="F_Recordatorio" targetRef="C_RecibirCotizacion" name="Recordatorio" messageRef="Message_Recordatorio"/>
+    <messageFlow id="MF09" sourceRef="C_Aceptar" targetRef="F_Aceptacion2" name="Aceptación final" messageRef="Message_Aceptacion"/>
+    <messageFlow id="MF10" sourceRef="C_Modificar" targetRef="F_Modificacion2" name="Modificación final" messageRef="Message_Modificacion"/>
+    <messageFlow id="MF11" sourceRef="C_Rechazar" targetRef="F_Rechazo2" name="Rechazo final" messageRef="Message_Rechazo"/>
+  </collaboration>
+  <bpmndi:BPMNDiagram id="Diagram_TO_BE">
+    <bpmndi:BPMNPlane id="Plane_TO_BE" bpmnElement="Collaboration_TO_BE">
+      <bpmndi:BPMNShape id="Shape_Participant_Cliente" bpmnElement="Participant_Cliente" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="4300" height="300"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Participant_Funeraria" bpmnElement="Participant_Funeraria" isHorizontal="true">
+        <dc:Bounds x="40" y="380" width="4300" height="1000"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Atencion" bpmnElement="Lane_Atencion" isHorizontal="true">
+        <dc:Bounds x="70" y="380" width="4270" height="430"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Lane_Administracion" bpmnElement="Lane_Administracion" isHorizontal="true">
+        <dc:Bounds x="70" y="810" width="4270" height="570"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_Start" bpmnElement="C_Start">
+        <dc:Bounds x="120" y="167" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_Completar" bpmnElement="C_Completar">
+        <dc:Bounds x="210" y="145" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_Enviar" bpmnElement="C_Enviar">
+        <dc:Bounds x="430" y="145" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_Esperar" bpmnElement="C_Esperar">
+        <dc:Bounds x="650" y="160" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_DatosFaltantes" bpmnElement="C_DatosFaltantes">
+        <dc:Bounds x="980" y="90" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_CompletarDatos" bpmnElement="C_CompletarDatos">
+        <dc:Bounds x="1050" y="70" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_ReenviarDatos" bpmnElement="C_ReenviarDatos">
+        <dc:Bounds x="1260" y="70" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_RecibirCotizacion" bpmnElement="C_RecibirCotizacion">
+        <dc:Bounds x="2350" y="215" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_Decision" bpmnElement="C_Decision">
+        <dc:Bounds x="2450" y="208" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_Aceptar" bpmnElement="C_Aceptar">
+        <dc:Bounds x="2610" y="70" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_Modificar" bpmnElement="C_Modificar">
+        <dc:Bounds x="2610" y="155" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_Rechazar" bpmnElement="C_Rechazar">
+        <dc:Bounds x="2610" y="240" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_FinAceptar" bpmnElement="C_FinAceptar">
+        <dc:Bounds x="2840" y="92" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_FinModificar" bpmnElement="C_FinModificar">
+        <dc:Bounds x="2840" y="177" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_C_FinRechazar" bpmnElement="C_FinRechazar">
+        <dc:Bounds x="2840" y="262" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Start" bpmnElement="F_Start">
+        <dc:Bounds x="487" y="560" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Registrar" bpmnElement="F_Registrar">
+        <dc:Bounds x="540" y="890" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Validar" bpmnElement="F_Validar">
+        <dc:Bounds x="740" y="890" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_GW_Datos" bpmnElement="F_GW_Datos">
+        <dc:Bounds x="940" y="905" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_SolicitarDatos" bpmnElement="F_SolicitarDatos">
+        <dc:Bounds x="1060" y="475" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_GW_EsperaDatos" bpmnElement="F_GW_EsperaDatos">
+        <dc:Bounds x="1270" y="490" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_DatosRecibidos" bpmnElement="F_DatosRecibidos">
+        <dc:Bounds x="1430" y="445" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Actualizar" bpmnElement="F_Actualizar">
+        <dc:Bounds x="1510" y="865" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_TimeoutDatos" bpmnElement="F_TimeoutDatos">
+        <dc:Bounds x="1430" y="555" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Incompleta" bpmnElement="F_Incompleta">
+        <dc:Bounds x="1510" y="995" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_FinIncompleta" bpmnElement="F_FinIncompleta">
+        <dc:Bounds x="1730" y="1017" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_ConsultarCatalogo" bpmnElement="F_ConsultarCatalogo">
+        <dc:Bounds x="1060" y="865" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_VerificarDisponibilidad" bpmnElement="F_VerificarDisponibilidad">
+        <dc:Bounds x="1270" y="865" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_GW_Disponible" bpmnElement="F_GW_Disponible">
+        <dc:Bounds x="1480" y="880" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_DefinirAlternativa" bpmnElement="F_DefinirAlternativa">
+        <dc:Bounds x="1600" y="650" width="180" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_GW_UnirDisponibilidad" bpmnElement="F_GW_UnirDisponibilidad">
+        <dc:Bounds x="1810" y="880" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_GenerarCotizacion" bpmnElement="F_GenerarCotizacion">
+        <dc:Bounds x="1910" y="865" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_RevisarCotizacion" bpmnElement="F_RevisarCotizacion">
+        <dc:Bounds x="2120" y="540" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_EnviarCotizacion" bpmnElement="F_EnviarCotizacion">
+        <dc:Bounds x="2320" y="540" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_RegistrarEmision" bpmnElement="F_RegistrarEmision">
+        <dc:Bounds x="2530" y="865" width="190" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_GW_EsperaDecision" bpmnElement="F_GW_EsperaDecision">
+        <dc:Bounds x="2730" y="555" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Aceptacion" bpmnElement="F_Aceptacion">
+        <dc:Bounds x="2880" y="435" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Modificacion" bpmnElement="F_Modificacion">
+        <dc:Bounds x="2880" y="520" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Rechazo" bpmnElement="F_Rechazo">
+        <dc:Bounds x="2880" y="605" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_TimeoutDecision" bpmnElement="F_TimeoutDecision">
+        <dc:Bounds x="2880" y="690" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_RegistrarAceptacion" bpmnElement="F_RegistrarAceptacion">
+        <dc:Bounds x="3500" y="850" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_RevisarModificacion" bpmnElement="F_RevisarModificacion">
+        <dc:Bounds x="3500" y="510" width="180" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_RegistrarRechazo" bpmnElement="F_RegistrarRechazo">
+        <dc:Bounds x="3500" y="955" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Recordatorio" bpmnElement="F_Recordatorio">
+        <dc:Bounds x="2980" y="665" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_GW_EsperaFinal" bpmnElement="F_GW_EsperaFinal">
+        <dc:Bounds x="3200" y="680" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Aceptacion2" bpmnElement="F_Aceptacion2">
+        <dc:Bounds x="3350" y="535" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Modificacion2" bpmnElement="F_Modificacion2">
+        <dc:Bounds x="3350" y="615" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Rechazo2" bpmnElement="F_Rechazo2">
+        <dc:Bounds x="3350" y="695" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_TimeoutFinal" bpmnElement="F_TimeoutFinal">
+        <dc:Bounds x="3350" y="775" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_RegistrarSinRespuesta" bpmnElement="F_RegistrarSinRespuesta">
+        <dc:Bounds x="3500" y="1060" width="190" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_GW_Cierre" bpmnElement="F_GW_Cierre">
+        <dc:Bounds x="3780" y="880" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Archivar" bpmnElement="F_Archivar">
+        <dc:Bounds x="3890" y="865" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_F_Fin" bpmnElement="F_Fin">
+        <dc:Bounds x="4110" y="887" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_DS_Central" bpmnElement="DS_Central">
+        <dc:Bounds x="4050" y="1215" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_DS_Catalogo" bpmnElement="DS_Catalogo">
+        <dc:Bounds x="1115" y="1225" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_DS_Disponibilidad" bpmnElement="DS_Disponibilidad">
+        <dc:Bounds x="1325" y="1225" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Annotation_Alcance" bpmnElement="Annotation_Alcance">
+        <dc:Bounds x="1860" y="1285" width="1040" height="55"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_CF01" bpmnElement="CF01">
+        <di:waypoint x="156" y="185"/><di:waypoint x="210" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF02" bpmnElement="CF02">
+        <di:waypoint x="370" y="185"/><di:waypoint x="430" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF03" bpmnElement="CF03">
+        <di:waypoint x="580" y="185"/><di:waypoint x="650" y="185"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF04" bpmnElement="CF04">
+        <di:waypoint x="675" y="160"/><di:waypoint x="675" y="108"/><di:waypoint x="980" y="108"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF05" bpmnElement="CF05">
+        <di:waypoint x="1016" y="108"/><di:waypoint x="1050" y="110"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF06" bpmnElement="CF06">
+        <di:waypoint x="1210" y="110"/><di:waypoint x="1260" y="110"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF07" bpmnElement="CF07">
+        <di:waypoint x="1410" y="110"/><di:waypoint x="1450" y="110"/><di:waypoint x="1450" y="50"/><di:waypoint x="675" y="50"/><di:waypoint x="675" y="160"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF08" bpmnElement="CF08">
+        <di:waypoint x="700" y="185"/><di:waypoint x="2290" y="185"/><di:waypoint x="2290" y="233"/><di:waypoint x="2350" y="233"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF09" bpmnElement="CF09">
+        <di:waypoint x="2386" y="233"/><di:waypoint x="2450" y="233"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF10" bpmnElement="CF10">
+        <di:waypoint x="2475" y="208"/><di:waypoint x="2475" y="110"/><di:waypoint x="2610" y="110"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF11" bpmnElement="CF11">
+        <di:waypoint x="2500" y="233"/><di:waypoint x="2550" y="233"/><di:waypoint x="2550" y="195"/><di:waypoint x="2610" y="195"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF12" bpmnElement="CF12">
+        <di:waypoint x="2475" y="258"/><di:waypoint x="2475" y="280"/><di:waypoint x="2610" y="280"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF13" bpmnElement="CF13">
+        <di:waypoint x="2760" y="110"/><di:waypoint x="2840" y="110"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF14" bpmnElement="CF14">
+        <di:waypoint x="2780" y="195"/><di:waypoint x="2840" y="195"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_CF15" bpmnElement="CF15">
+        <di:waypoint x="2760" y="280"/><di:waypoint x="2840" y="280"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F01" bpmnElement="F01">
+        <di:waypoint x="505" y="596"/><di:waypoint x="505" y="930"/><di:waypoint x="540" y="930"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F02" bpmnElement="F02">
+        <di:waypoint x="700" y="930"/><di:waypoint x="740" y="930"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F03" bpmnElement="F03">
+        <di:waypoint x="900" y="930"/><di:waypoint x="940" y="930"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F04" bpmnElement="F04">
+        <di:waypoint x="990" y="930"/><di:waypoint x="1060" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F05" bpmnElement="F05">
+        <di:waypoint x="965" y="905"/><di:waypoint x="965" y="515"/><di:waypoint x="1060" y="515"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F06" bpmnElement="F06">
+        <di:waypoint x="1230" y="515"/><di:waypoint x="1270" y="515"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F07" bpmnElement="F07">
+        <di:waypoint x="1320" y="515"/><di:waypoint x="1375" y="515"/><di:waypoint x="1375" y="463"/><di:waypoint x="1430" y="463"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F08" bpmnElement="F08">
+        <di:waypoint x="1466" y="463"/><di:waypoint x="1475" y="463"/><di:waypoint x="1475" y="905"/><di:waypoint x="1510" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F09" bpmnElement="F09">
+        <di:waypoint x="1510" y="885"/><di:waypoint x="1460" y="885"/><di:waypoint x="1460" y="830"/><di:waypoint x="820" y="830"/><di:waypoint x="820" y="890"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F10" bpmnElement="F10">
+        <di:waypoint x="1295" y="540"/><di:waypoint x="1295" y="573"/><di:waypoint x="1430" y="573"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F11" bpmnElement="F11">
+        <di:waypoint x="1466" y="573"/><di:waypoint x="1485" y="573"/><di:waypoint x="1485" y="1035"/><di:waypoint x="1510" y="1035"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F12" bpmnElement="F12">
+        <di:waypoint x="1680" y="1035"/><di:waypoint x="1730" y="1035"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F13" bpmnElement="F13">
+        <di:waypoint x="1230" y="905"/><di:waypoint x="1270" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F14" bpmnElement="F14">
+        <di:waypoint x="1440" y="905"/><di:waypoint x="1480" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F15" bpmnElement="F15">
+        <di:waypoint x="1530" y="905"/><di:waypoint x="1810" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F16" bpmnElement="F16">
+        <di:waypoint x="1505" y="880"/><di:waypoint x="1505" y="690"/><di:waypoint x="1600" y="690"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F17" bpmnElement="F17">
+        <di:waypoint x="1780" y="690"/><di:waypoint x="1835" y="690"/><di:waypoint x="1835" y="880"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F18" bpmnElement="F18">
+        <di:waypoint x="1860" y="905"/><di:waypoint x="1910" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F19" bpmnElement="F19">
+        <di:waypoint x="2080" y="905"/><di:waypoint x="2100" y="905"/><di:waypoint x="2100" y="580"/><di:waypoint x="2120" y="580"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F20" bpmnElement="F20">
+        <di:waypoint x="2280" y="580"/><di:waypoint x="2320" y="580"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F21" bpmnElement="F21">
+        <di:waypoint x="2490" y="580"/><di:waypoint x="2510" y="580"/><di:waypoint x="2510" y="905"/><di:waypoint x="2530" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F22" bpmnElement="F22">
+        <di:waypoint x="2720" y="905"/><di:waypoint x="2755" y="905"/><di:waypoint x="2755" y="605"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F23" bpmnElement="F23">
+        <di:waypoint x="2780" y="580"/><di:waypoint x="2830" y="580"/><di:waypoint x="2830" y="453"/><di:waypoint x="2880" y="453"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F24" bpmnElement="F24">
+        <di:waypoint x="2916" y="453"/><di:waypoint x="2945" y="453"/><di:waypoint x="2945" y="890"/><di:waypoint x="3500" y="890"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F25" bpmnElement="F25">
+        <di:waypoint x="3670" y="890"/><di:waypoint x="3780" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F26" bpmnElement="F26">
+        <di:waypoint x="2780" y="580"/><di:waypoint x="2835" y="580"/><di:waypoint x="2835" y="538"/><di:waypoint x="2880" y="538"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F27" bpmnElement="F27">
+        <di:waypoint x="2916" y="538"/><di:waypoint x="3500" y="550"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F28" bpmnElement="F28">
+        <di:waypoint x="3590" y="510"/><di:waypoint x="3590" y="400"/><di:waypoint x="1120" y="400"/><di:waypoint x="1120" y="865"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F29" bpmnElement="F29">
+        <di:waypoint x="2780" y="580"/><di:waypoint x="2835" y="580"/><di:waypoint x="2835" y="623"/><di:waypoint x="2880" y="623"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F30" bpmnElement="F30">
+        <di:waypoint x="2916" y="623"/><di:waypoint x="2945" y="623"/><di:waypoint x="2945" y="995"/><di:waypoint x="3500" y="995"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F31" bpmnElement="F31">
+        <di:waypoint x="3670" y="995"/><di:waypoint x="3755" y="995"/><di:waypoint x="3755" y="905"/><di:waypoint x="3780" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F32" bpmnElement="F32">
+        <di:waypoint x="2755" y="605"/><di:waypoint x="2755" y="708"/><di:waypoint x="2880" y="708"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F33" bpmnElement="F33">
+        <di:waypoint x="2916" y="708"/><di:waypoint x="2980" y="705"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F34" bpmnElement="F34">
+        <di:waypoint x="3150" y="705"/><di:waypoint x="3200" y="705"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F35" bpmnElement="F35">
+        <di:waypoint x="3250" y="705"/><di:waypoint x="3290" y="705"/><di:waypoint x="3290" y="553"/><di:waypoint x="3350" y="553"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F36" bpmnElement="F36">
+        <di:waypoint x="3386" y="553"/><di:waypoint x="3420" y="553"/><di:waypoint x="3420" y="890"/><di:waypoint x="3500" y="890"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F37" bpmnElement="F37">
+        <di:waypoint x="3250" y="705"/><di:waypoint x="3310" y="705"/><di:waypoint x="3310" y="633"/><di:waypoint x="3350" y="633"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F38" bpmnElement="F38">
+        <di:waypoint x="3386" y="633"/><di:waypoint x="3440" y="633"/><di:waypoint x="3440" y="550"/><di:waypoint x="3500" y="550"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F39" bpmnElement="F39">
+        <di:waypoint x="3250" y="705"/><di:waypoint x="3330" y="705"/><di:waypoint x="3330" y="713"/><di:waypoint x="3350" y="713"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F40" bpmnElement="F40">
+        <di:waypoint x="3386" y="713"/><di:waypoint x="3460" y="713"/><di:waypoint x="3460" y="995"/><di:waypoint x="3500" y="995"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F41" bpmnElement="F41">
+        <di:waypoint x="3225" y="730"/><di:waypoint x="3225" y="793"/><di:waypoint x="3350" y="793"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F42" bpmnElement="F42">
+        <di:waypoint x="3386" y="793"/><di:waypoint x="3475" y="793"/><di:waypoint x="3475" y="1100"/><di:waypoint x="3500" y="1100"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F43" bpmnElement="F43">
+        <di:waypoint x="3690" y="1100"/><di:waypoint x="3805" y="1100"/><di:waypoint x="3805" y="930"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F44" bpmnElement="F44">
+        <di:waypoint x="3830" y="905"/><di:waypoint x="3890" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_F45" bpmnElement="F45">
+        <di:waypoint x="4060" y="905"/><di:waypoint x="4110" y="905"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF01" bpmnElement="MF01">
+        <di:waypoint x="505" y="225"/><di:waypoint x="505" y="560"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF02" bpmnElement="MF02">
+        <di:waypoint x="1145" y="475"/><di:waypoint x="1145" y="330"/><di:waypoint x="998" y="330"/><di:waypoint x="998" y="126"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF03" bpmnElement="MF03">
+        <di:waypoint x="1335" y="150"/><di:waypoint x="1335" y="360"/><di:waypoint x="1448" y="360"/><di:waypoint x="1448" y="445"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF04" bpmnElement="MF04">
+        <di:waypoint x="2405" y="540"/><di:waypoint x="2405" y="300"/><di:waypoint x="2368" y="300"/><di:waypoint x="2368" y="251"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF05" bpmnElement="MF05">
+        <di:waypoint x="2685" y="150"/><di:waypoint x="2685" y="360"/><di:waypoint x="2898" y="360"/><di:waypoint x="2898" y="435"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF06" bpmnElement="MF06">
+        <di:waypoint x="2695" y="235"/><di:waypoint x="2695" y="380"/><di:waypoint x="2898" y="380"/><di:waypoint x="2898" y="520"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF07" bpmnElement="MF07">
+        <di:waypoint x="2685" y="320"/><di:waypoint x="2685" y="400"/><di:waypoint x="2898" y="400"/><di:waypoint x="2898" y="605"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF08" bpmnElement="MF08">
+        <di:waypoint x="3065" y="665"/><di:waypoint x="3065" y="335"/><di:waypoint x="2368" y="335"/><di:waypoint x="2368" y="251"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF09" bpmnElement="MF09">
+        <di:waypoint x="2685" y="150"/><di:waypoint x="2685" y="345"/><di:waypoint x="3368" y="345"/><di:waypoint x="3368" y="535"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF10" bpmnElement="MF10">
+        <di:waypoint x="2695" y="235"/><di:waypoint x="2695" y="365"/><di:waypoint x="3368" y="365"/><di:waypoint x="3368" y="615"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_MF11" bpmnElement="MF11">
+        <di:waypoint x="2685" y="320"/><di:waypoint x="2685" y="385"/><di:waypoint x="3368" y="385"/><di:waypoint x="3368" y="695"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A01" bpmnElement="A01">
+        <di:waypoint x="620" y="970"/><di:waypoint x="620" y="1300"/><di:waypoint x="4075" y="1300"/><di:waypoint x="4075" y="1265"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A02" bpmnElement="A02">
+        <di:waypoint x="1590" y="945"/><di:waypoint x="1590" y="1290"/><di:waypoint x="4075" y="1290"/><di:waypoint x="4075" y="1265"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A03" bpmnElement="A03">
+        <di:waypoint x="1145" y="945"/><di:waypoint x="1145" y="1225"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A04" bpmnElement="A04">
+        <di:waypoint x="1355" y="945"/><di:waypoint x="1355" y="1225"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A05" bpmnElement="A05">
+        <di:waypoint x="1995" y="945"/><di:waypoint x="1995" y="1280"/><di:waypoint x="4075" y="1280"/><di:waypoint x="4075" y="1265"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A06" bpmnElement="A06">
+        <di:waypoint x="2625" y="945"/><di:waypoint x="2625" y="1270"/><di:waypoint x="4075" y="1270"/><di:waypoint x="4075" y="1265"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A07" bpmnElement="A07">
+        <di:waypoint x="3585" y="930"/><di:waypoint x="3585" y="1260"/><di:waypoint x="4050" y="1260"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A08" bpmnElement="A08">
+        <di:waypoint x="3585" y="1035"/><di:waypoint x="3585" y="1250"/><di:waypoint x="4050" y="1250"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A09" bpmnElement="A09">
+        <di:waypoint x="3595" y="1140"/><di:waypoint x="3595" y="1240"/><di:waypoint x="4050" y="1240"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_A10" bpmnElement="A10">
+        <di:waypoint x="1995" y="945"/><di:waypoint x="1995" y="1285"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

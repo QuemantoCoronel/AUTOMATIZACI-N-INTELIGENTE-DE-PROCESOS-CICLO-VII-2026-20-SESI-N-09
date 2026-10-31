@@ -1,0 +1,42 @@
+{
+  "id": "23bf89b2-e862-45fe-bbfb-272a04100da6",
+  "name": "Pipeline_Cotizacion_Funeraria_Velazquex",
+  "start_time": "2026-10-31 12:14:08.491361+00:00",
+  "run_type": "chain",
+  "end_time": "2026-10-31 12:14:08.516515+00:00",
+  "extra": {
+    "metadata": {
+      "version_bpmn": "TO-BE-2.0",
+      "arquitectura": "supervisor"
+    }
+  },
+  "error": null,
+  "serialized": null,
+  "events": [],
+  "inputs": {
+    "cliente": "María Elena Rodriguez",
+    "telefono": "987654321",
+    "servicio": "Cremación",
+    "fecha": "2026-10-20"
+  },
+  "outputs": {
+    "codigo_cotizacion": "COT-2026-3E2EB",
+    "total_pen": 3304.0,
+    "mensaje_cliente": "Estimada familia María Elena Rodriguez,\nCumpliendo con brindarle la debida atención y transparencia, le presentamos la cotización solicitada:\n\n📋 Cotización Formal N.°: COT-2026-3E2EB\n• Servicio: Sepelio Integral Dignidad\n• Subtotal: S/ 2,800.00 PEN\n• IGV (18%): S/ 504.00 PEN\n• Importe Total: S/ 3,304.00 PEN\n*(Nota: Debido a la alta demanda en la fecha solicitada, se asignó una alternativa con tarifa preferencial)*\n\nValidez: 5 días hábiles. Si desea proceder con la reserva o requiere asistencia, estamos a su lado 24/7.",
+    "estado_final": "COMPLETADO_EXITOSO"
+  },
+  "reference_example_id": null,
+  "parent_run_id": null,
+  "tags": [
+    "upao",
+    "aip-sesion9",
+    "langgraph",
+    "hitl"
+  ],
+  "attachments": {},
+  "session_name": "default",
+  "session_id": null,
+  "dotted_order": "20261031T121408491361Z23bf89b2-e862-45fe-bbfb-272a04100da6",
+  "trace_id": "23bf89b2-e862-45fe-bbfb-272a04100da6",
+  "dangerously_allow_filesystem": false
+}
